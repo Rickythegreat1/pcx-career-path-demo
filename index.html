@@ -598,6 +598,8 @@ function completeItem(kind, id){
     const i = S.cert.items.find(i => i.id === id);
     if (i.ty === 'VERIFY') {
       i.waiting = true;
+      // a resubmission replaces any earlier queue entry, never duplicates it
+      S.queue = S.queue.filter(q => q.id !== 'qS');
       S.queue.push({ id:'qS', who:'Sarah Johnson', what:'Listing Basics · Listing presentation, live with leader',
         ctx:'Delivered the full listing presentation on the office call. Recording attached. Quiz already passed at 88% (2 attempts, logged).', done:false });
       emit('item.submitted_for_verification', '"'+i.nm+'" · notifies Joe now');
