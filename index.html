@@ -5,17 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PCx Career Path · Working Demo</title>
 <meta name="description" content="Interactive demo of the PCx Career Path system: the ranked Agent Home, the Career Path Builder, and leader verification, running as one connected loop.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* PCx V2 design language: zinc neutrals, one action blue, navy shell.
    Single file, no dependencies, mock data only. */
 :root {
   --z50:#FAFAFA; --z100:#F4F4F5; --z200:#E4E4E7; --z300:#D4D4D8; --z400:#A1A1AA;
   --z500:#71717A; --z600:#52525B; --z700:#3F3F46; --z800:#27272A; --z900:#18181B;
-  --blue:#2563EB; --blue-700:#1D4ED8; --blue-50:#EFF6FF; --blue-200:#BFDBFE;
-  --green:#16A34A; --green-100:#DCFCE7; --green-800:#166534;
-  --amber:#D97706; --amber-100:#FEF3C7; --amber-800:#92400E;
-  --red:#DC2626; --navy:#18202E;
-  --sans:-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --blue:#155DFC; --blue-700:#1447E6; --blue-50:#EFF6FF; --blue-200:#BFDBFE;
+  --green:#00A63E; --green-100:#DCFCE7; --green-800:#166534;
+  --amber:#E17100; --amber-100:#FFEDD4; --amber-800:#92400E;
+  --red:#E7000B; --navy:#101828;
+  --sans:"Inter",-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;
   --mono:"SF Mono",Menlo,Consolas,monospace;
 }
 *{margin:0;padding:0;box-sizing:border-box}
@@ -165,6 +168,12 @@ h1{font-size:24px;font-weight:700;letter-spacing:-.01em}
   .feed .item{padding:16px}
   .switch button{padding:10px 12px;min-height:40px}
 }
+@media(max-width:560px){
+  .topbar{padding:10px 14px}
+  .topbar .crumb{display:none}
+  .switch{flex:1;min-width:0}
+  .switch button{flex:1;padding:9px 4px;font-size:11px;min-height:40px}
+}
 </style>
 </head>
 <body>
@@ -184,6 +193,7 @@ h1{font-size:24px;font-weight:700;letter-spacing:-.01em}
     <div class="topbar">
       <span class="crumb" id="crumb">Agent · Sarah Johnson · Fundamentals</span>
       <div class="spacer"></div>
+      <span class="mini" style="flex:none">View as</span>
       <div class="switch" role="tablist" aria-label="View as">
         <button id="sw-agent" class="on" onclick="setRole('agent')">Sarah · Agent</button>
         <button id="sw-leader" onclick="setRole('leader')">Joe · Leader</button>
@@ -234,6 +244,10 @@ const S = {
     { id:'t4', src:'personal', nm:'Order open house signs', m:'personal task · due Friday', due:3, done:false }
   ],
   t3690: { day:34, pct:62, waiting:['Submit business plan draft'] },
+  dbEnrolled: false,
+  newPaths: [],
+  roster: { 'Mike Torres': 3, 'Dana Wells': 2 },
+  quizOpen: false,
   queue: [
     { id:'q0', who:'Mike Torres', what:'Buyer Basics · Build a CMA for a real address', ctx:'Submitted a CMA for 4482 E Palo Verde Dr. Comps chosen from the last 90 days, adjustments noted in the file.', done:false }
   ],
@@ -300,7 +314,7 @@ function agentView() {
 
   const heroHtml = hero ? `
     <div class="hero">
-      <div class="mini">Your next action</div>
+      <div class="mini">&ldquo;What should I do today?&rdquo; &middot; your answer</div>
       <h3>${hero.ref.nm}</h3>
       <div class="meta">${hero.kind==='cert'
         ? `${S.cert.name} · item ${certDone+1} of 9${hero.gateInReach ? '' : ''}`
@@ -332,7 +346,7 @@ function agentView() {
     <div class="home-grid">
       <div>
         ${heroHtml}
-        <div class="mini" style="margin:0 0 8px 2px">Then, in order</div>
+        <div class="mini" style="margin:0 0 8px 2px;display:flex;justify-content:space-between"><span>Then, in order</span><a href="#" style="color:var(--blue-700);text-transform:none;letter-spacing:0" onclick="document.getElementById('newtask').focus();return false">+ add your own</a></div>
         <div class="card feed">
           ${rest.map(f => `
             <div class="item">
@@ -350,12 +364,25 @@ function agentView() {
             </div>`:''}
           ${feed.length<=1 && !waitingItem ? `<div class="item"><div class="grow"><div class="t" style="color:var(--z500)">All caught up.</div><div class="m">Next suggestion: start Database Certification, the first open elective in your stage.</div></div></div>`:''}
         </div>
+        <div class="card" style="margin-top:14px;padding:13px 16px">
+          <div class="mini" style="margin-bottom:8px">Add your own task</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <input id="newtask" placeholder="e.g. Prep Saturday open house" style="flex:1;min-width:180px;border:1px solid var(--z300);border-radius:8px;padding:9px 12px;font-size:13.5px;font-family:var(--sans)">
+            <select id="newtaskdue" style="border:1px solid var(--z300);border-radius:8px;padding:9px 10px;font-size:13px;font-family:var(--sans);background:#fff">
+              <option value="0">due today</option><option value="3" selected>this week</option>
+            </select>
+            <button class="btn ghost" onclick="addOwnTask()">Add task</button>
+          </div>
+        </div>
       </div>
       <div class="rail">
         <div class="card">
           <h4>Listing Basics · focus</h4>
           <div class="bar"><i style="width:${Math.round(certDone/9*100)}%"></i></div>
-          <div class="ln">${certDone} of 9 items · quiz passed ${S.cert.quiz.score}%</div>
+          <div class="ln">${certDone} of 9 items · <a href="#" style="color:var(--blue-700)" onclick="S.quizOpen=!S.quizOpen;render();return false">quiz passed ${S.cert.quiz.score}% ${S.quizOpen?'▾':'▸'}</a></div>
+          ${S.quizOpen?`<div class="ln" style="font-family:var(--mono);font-size:11.5px;background:var(--z50);border-radius:7px;padding:8px 10px;margin:4px 0">
+            attempt 1 · Jun 30 · 72% · below 80, retake after cooldown<br>
+            attempt 2 · Jul 2 · 88% · passed · graded server-side, logged</div>`:''}
           <div class="ln">mode: ${S.cert.mode}</div>
         </div>
         <div class="card">
@@ -364,7 +391,9 @@ function agentView() {
           <div class="stage-ln ${S.stageAdvanced?'done':'cur'}"><span class="sdot"></span>Fundamentals</div>
           <div class="stage-ln ${S.stageAdvanced?'cur':''}"><span class="sdot"></span>Mastery Skills</div>
           <div class="stage-ln"><span class="sdot"></span>Wealth Building</div>
-          <div class="ln" style="margin-top:6px">Buyer Basics ✓ · Listing Basics ${S.gateReady||S.stageAdvanced?'✓':certDone+'/9'}</div>
+          <div class="ln" style="margin-top:6px">Buyer Basics ✓ · Listing Basics ${S.gateReady||S.stageAdvanced?'✓':certDone+'/9'}${S.dbEnrolled?' · Database enrolled':''}</div>
+          ${!S.dbEnrolled && !S.stageAdvanced ? `<button class="btn ghost" style="margin-top:10px;width:100%;font-size:12.5px" onclick="enrollDb()">You choose your paths: start Database Certification</button>`:''}
+          ${S.stageAdvanced ? `<div class="ln" style="margin-top:6px">Now open: Buyer Mastery · Listing Mastery</div>`:''}
         </div>
         <div class="card">
           <h4>30-60-90 · day ${S.t3690.day}</h4>
@@ -379,9 +408,9 @@ function agentView() {
 function leaderView() {
   const open = S.queue.filter(q => !q.done);
   const flags = [];
-  if (open.length) flags.push(['#D97706', `Waiting on you · ${open.length} verification${open.length===1?'':'s'} pending`]);
-  if (S.gateReady && !S.stageAdvanced) flags.push(['#16A34A', 'Gate ready · Sarah Johnson · Fundamentals complete, confirm to advance']);
-  flags.push(['#DC2626', 'Stalled · Chandler South: 2 agents, no career path progress in 7 days']);
+  if (open.length) flags.push(['#E17100', `Waiting on you · ${open.length} verification${open.length===1?'':'s'} pending`]);
+  if (S.gateReady && !S.stageAdvanced) flags.push(['#00A63E', 'Gate ready · Sarah Johnson · Fundamentals complete, confirm to advance']);
+  flags.push(['#E7000B', 'Stalled · Chandler South: 2 agents, no career path progress in 7 days']);
 
   return `
     <div class="h-row"><h1>Good morning, Joe</h1><span class="badge zinc">Scottsdale office</span></div>
@@ -411,6 +440,20 @@ function leaderView() {
       </div>
       <div class="rail">
         <div class="card" style="padding:15px 17px">
+          <h4>Assign a task</h4>
+          <input id="ltask" placeholder="e.g. Bring your Q3 numbers to the 1:1" style="width:100%;border:1px solid var(--z300);border-radius:8px;padding:9px 12px;font-size:13px;font-family:var(--sans);margin-bottom:8px">
+          <select id="lwho" style="width:100%;border:1px solid var(--z300);border-radius:8px;padding:9px 10px;font-size:13px;font-family:var(--sans);background:#fff;margin-bottom:10px">
+            <option value="sarah">Sarah Johnson</option>
+            <option value="mike">Mike Torres</option>
+            <option value="group">All Fundamentals agents (3)</option>
+          </select>
+          <button class="btn" style="width:100%" onclick="assignTask()">Assign</button>
+          <div class="ln" style="margin-top:8px;font-size:11.5px;color:var(--z400)">One agent or a group: write it once, the system fans it out.</div>
+          <div class="ln" style="margin-top:6px;font-family:var(--mono);font-size:11px">
+            Open tasks · Sarah ${S.tasks.filter(t=>!t.done).length} · Mike ${S.roster['Mike Torres']} · Dana ${S.roster['Dana Wells']}
+          </div>
+        </div>
+        <div class="card" style="padding:15px 17px;margin-top:14px">
           <h4>Needs attention</h4>
           ${flags.map(f => `<div class="flag"><span class="fdot" style="background:${f[0]}"></span>${f[1]}</div>`).join('')}
         </div>
@@ -432,11 +475,16 @@ function builderView() {
       <div class="b-col"><div class="card">
         <h4>Stages</h4>
         <div class="stg"><div class="nm">1 · Getting Set Up</div><div class="ct">1 required path</div></div>
+        <div class="path"><span>Office Onboarding</span><span class="badge green">required</span></div>
         <div class="stg" style="background:var(--z50)"><div class="nm">2 · Fundamentals</div><div class="ct">2 required + electives</div></div>
         <div class="path"><span>Buyer Basics</span><span class="badge green">required</span></div>
         <div class="path sel"><span>Listing Basics</span><span class="badge green">required</span></div>
         <div class="path"><span>Database Cert.</span><span class="badge zinc">elective</span></div>
-        <div class="stg"><div class="nm">3 · Mastery Skills</div><div class="ct">4 paths</div></div>
+        ${S.newPaths.map(p=>`<div class="path"><span>${p}</span><span class="badge zinc">elective · draft</span></div>`).join('')}
+        <button style="margin:2px 0 6px 22px;font-size:12px;color:var(--blue-700)" onclick="addPath()">+ add a certification</button>
+        <div class="stg"><div class="nm">3 · Mastery Skills</div><div class="ct">opens at the Fundamentals gate</div></div>
+        <div class="path" style="opacity:.6"><span>Buyer Mastery</span><span class="badge zinc">required</span></div>
+        <div class="path" style="opacity:.6"><span>Listing Mastery</span><span class="badge zinc">required</span></div>
         <div class="stg"><div class="nm">4 · Wealth Building</div><div class="ct">2 paths</div></div>
       </div></div>
       <div class="b-col"><div class="card">
@@ -576,6 +624,56 @@ function moveItem(idx,dir){
 function publish(){
   emit('template.pushed', 'Listing Basics v3 · new enrollments only · preview confirmed');
   toast('Version 3 published for new enrollments. Enrolled agents keep v2 until you push, with a preview first.');
+}
+function addOwnTask(){
+  const inp = document.getElementById('newtask');
+  const due = parseInt(document.getElementById('newtaskdue').value, 10);
+  const nm = (inp.value || '').trim();
+  if (!nm) { toast('Give the task a name first.'); return; }
+  S.tasks.push({ id:'p'+Date.now(), src:'personal', nm, m:'personal task · '+(due===0?'due today':'due Friday'), due, done:false });
+  emit('task.created', '"'+nm+'" · self-assigned · Sarah Johnson');
+  emit('home.feed.reordered', 'Sarah Johnson · rank() re-ran');
+  toast('Added. It ranks with everything else, never in a separate silo.');
+  render();
+}
+function enrollDb(){
+  S.dbEnrolled = true;
+  S.tasks.push({ id:'db1', src:'personal', nm:'Database Certification: connect your CRM export', m:'Database Certification · first item · elective', due:3, done:false });
+  emit('learning_path.enrolled', 'Database Certification · chosen by Sarah · Listing Basics stays her focus');
+  emit('home.feed.reordered', 'Sarah Johnson · elective items rank at tier 5');
+  toast('Enrolled. Your focus stays on Listing Basics; Database items rank below it.');
+  render();
+}
+function assignTask(){
+  const inp = document.getElementById('ltask');
+  const who = document.getElementById('lwho').value;
+  const nm = (inp.value || '').trim();
+  if (!nm) { toast('Give the task a name first.'); return; }
+  if (who === 'group') {
+    // real fan-out: one instance per agent in state, not just in the log
+    S.tasks.push({ id:'l'+Date.now(), src:'leader', nm, m:'assigned by Joe · due today', due:0, done:false });
+    S.roster['Mike Torres']++; S.roster['Dana Wells']++;
+    ['Sarah Johnson','Mike Torres','Dana Wells'].forEach(a =>
+      emit('task.assigned', '"'+nm+'" · to '+a+' · one instance each'));
+    toast('Fanned out: 3 instances created. You are looking at Sarah’s; the counts to the right are Mike’s and Dana’s.');
+  } else if (who === 'sarah') {
+    S.tasks.push({ id:'l'+Date.now(), src:'leader', nm, m:'assigned by Joe · due today', due:0, done:false });
+    emit('task.assigned', '"'+nm+'" · to Sarah Johnson · by Joe');
+    toast('Assigned. It is already in Sarah’s ranked feed.');
+  } else {
+    S.roster['Mike Torres']++;
+    emit('task.assigned', '"'+nm+'" · to Mike Torres · by Joe');
+    toast('Assigned to Mike: his open count just moved. His Home ranks it the same way Sarah’s would.');
+  }
+  emit('home.feed.reordered', 'recipients re-ranked');
+  inp.value = '';
+  render();
+}
+function addPath(){
+  S.newPaths.push('New Certification ' + (S.newPaths.length + 2));
+  emit('builder.path_added', 'Fundamentals · elective · draft');
+  toast('Certification added to the stage. Compose its items, then publish.');
+  render();
 }
 
 emit('demo.loaded', 'mock data · every view renders from one state object');
