@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCx Career Path · Working Demo</title>
+<meta name="description" content="Interactive demo of the PCx Career Path system: the ranked Agent Home, the Career Path Builder, and leader verification, running as one connected loop.">
+<style>
+/* PCx V2 design language: zinc neutrals, one action blue, navy shell.
+   Single file, no dependencies, mock data only. */
+:root {
+  --z50:#FAFAFA; --z100:#F4F4F5; --z200:#E4E4E7; --z300:#D4D4D8; --z400:#A1A1AA;
+  --z500:#71717A; --z600:#52525B; --z700:#3F3F46; --z800:#27272A; --z900:#18181B;
+  --blue:#2563EB; --blue-700:#1D4ED8; --blue-50:#EFF6FF; --blue-200:#BFDBFE;
+  --green:#16A34A; --green-100:#DCFCE7; --green-800:#166534;
+  --amber:#D97706; --amber-100:#FEF3C7; --amber-800:#92400E;
+  --red:#DC2626; --navy:#18202E;
+  --sans:-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+  --mono:"SF Mono",Menlo,Consolas,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--sans);background:var(--z100);color:var(--z900);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font-family:var(--sans);cursor:pointer;border:none;background:none;font-size:14px}
+
+/* ---------- app frame ---------- */
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+aside.side{background:var(--navy);color:#fff;padding:20px 14px;display:flex;flex-direction:column;gap:2px}
+.side .logo{display:flex;align-items:center;gap:10px;padding:4px 10px 18px}
+.side .logo .mark{width:30px;height:30px;background:var(--blue);border-radius:6px;display:grid;place-items:center;font-weight:700;font-size:13px}
+.side .logo b{font-size:14px}
+.side .logo span{display:block;font-size:11px;color:#8B95A7}
+.side .grp{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:#67718455;color:#6B7689;padding:14px 10px 6px;text-transform:uppercase}
+.side a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;color:#A7B0C0;font-size:13.5px;text-decoration:none}
+.side a.on{background:var(--blue);color:#fff}
+.side a.dim{opacity:.45;pointer-events:none}
+.side .dot{width:17px;height:17px;border-radius:5px;background:#2A3444;flex:none}
+.side a.on .dot{background:#ffffff33}
+main{min-width:0}
+.topbar{background:#fff;border-bottom:1px solid var(--z200);padding:10px 26px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:20}
+.topbar .crumb{font-size:13px;color:var(--z500)}
+.topbar .spacer{flex:1}
+.switch{display:flex;background:var(--z100);border:1px solid var(--z200);border-radius:9px;padding:3px;gap:2px}
+.switch button{padding:6px 13px;border-radius:6px;font-size:12.5px;font-weight:600;color:var(--z500)}
+.switch button.on{background:#fff;color:var(--z900);box-shadow:0 1px 2px #0002}
+.content{padding:26px;max-width:1120px}
+
+/* ---------- shared bits ---------- */
+.h-row{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:4px;flex-wrap:wrap}
+h1{font-size:24px;font-weight:700;letter-spacing:-.01em}
+.sub{color:var(--z500);font-size:13.5px;margin-bottom:20px}
+.card{background:#fff;border:1px solid var(--z200);border-radius:10px}
+.badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 9px;border-radius:999px}
+.badge.green{background:var(--green-100);color:var(--green-800)}
+.badge.amber{background:var(--amber-100);color:var(--amber-800)}
+.badge.blue{background:var(--blue-50);color:var(--blue-700)}
+.badge.zinc{background:var(--z100);color:var(--z600);border:1px solid var(--z200)}
+.btn{background:var(--blue);color:#fff;font-weight:600;font-size:13.5px;padding:9px 16px;border-radius:8px}
+.btn:hover{background:var(--blue-700)}
+.btn.ghost{background:#fff;color:var(--z700);border:1px solid var(--z300)}
+.btn.ghost:hover{background:var(--z50)}
+.btn:disabled{background:var(--z300);cursor:not-allowed}
+.mini{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--z400);font-weight:500}
+.toast{position:fixed;bottom:64px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--z900);color:#fff;padding:10px 18px;border-radius:9px;font-size:13.5px;opacity:0;transition:.25s;z-index:60;pointer-events:none;max-width:92vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ---------- agent home ---------- */
+.home-grid{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start}
+.hero{border:1.5px solid var(--blue);background:var(--blue-50);border-radius:10px;padding:18px 20px;margin-bottom:18px;position:relative}
+.hero .mini{color:var(--blue-700)}
+.hero h3{font-size:17px;margin:6px 0 3px;letter-spacing:-.005em}
+.hero .meta{font-size:13px;color:var(--z600)}
+.hero .act{margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.why{font-size:12px;color:var(--blue-700);text-decoration:underline dotted;cursor:pointer}
+.whybox{display:none;margin-top:10px;background:#fff;border:1px solid var(--blue-200);border-radius:8px;padding:10px 14px;font-size:12.5px;color:var(--z600)}
+.whybox.open{display:block}
+.whybox b{font-family:var(--mono);font-size:10.5px;color:var(--blue-700)}
+.feed .item{display:flex;align-items:center;gap:13px;padding:13px 16px;border-bottom:1px solid var(--z100)}
+.feed .item:last-child{border-bottom:none}
+.feed .chk{width:19px;height:19px;border:1.7px solid var(--z300);border-radius:5px;flex:none;cursor:pointer;display:grid;place-items:center;color:#fff;font-size:12px}
+.feed .item.done .chk{background:var(--green);border-color:var(--green)}
+.feed .item.done .t{text-decoration:line-through;color:var(--z400)}
+.feed .grow{min-width:0;flex:1}
+.feed .t{font-size:14px;font-weight:550}
+.feed .m{font-size:12px;color:var(--z500)}
+.feed .item.waiting{background:var(--z50)}
+.feed .item.waiting .chk{border-style:dashed;cursor:default;color:var(--z400)}
+.tierchip{font-family:var(--mono);font-size:9.5px;color:var(--z400);flex:none}
+.rail .card{padding:15px 17px;margin-bottom:14px}
+.rail h4{font-size:13.5px;font-weight:600;margin-bottom:8px}
+.bar{height:6px;background:var(--z200);border-radius:99px;overflow:hidden;margin:8px 0 6px}
+.bar i{display:block;height:100%;background:var(--blue);border-radius:99px;transition:width .5s}
+.rail .ln{font-size:12.5px;color:var(--z600);padding:3px 0}
+.stage-ln{display:flex;align-items:center;gap:8px;font-size:12.5px;padding:3px 0;color:var(--z600)}
+.stage-ln .sdot{width:8px;height:8px;border-radius:99px;background:var(--z300);flex:none}
+.stage-ln.done .sdot{background:var(--green)}
+.stage-ln.cur .sdot{background:var(--blue)}
+.stage-ln.cur{color:var(--z900);font-weight:600}
+.gatecard{border:1.5px solid var(--green);background:var(--green-100);border-radius:10px;padding:16px 18px;margin-bottom:18px;display:none}
+.gatecard.show{display:block;animation:pop .4s}
+@keyframes pop{0%{transform:scale(.97);opacity:0}100%{transform:scale(1);opacity:1}}
+.gatecard h3{font-size:16px;color:var(--green-800)}
+.gatecard p{font-size:13px;color:var(--green-800);opacity:.85;margin-top:3px}
+
+/* ---------- builder ---------- */
+.b-grid{display:grid;grid-template-columns:250px 1fr 250px;gap:16px;align-items:start}
+.b-col .card{padding:14px}
+.b-col h4{font-size:13px;font-weight:700;margin-bottom:10px}
+.stg{padding:9px 10px;border-radius:8px;margin-bottom:4px}
+.stg .nm{font-size:13.5px;font-weight:600}
+.stg .ct{font-size:11.5px;color:var(--z500)}
+.path{padding:8px 10px 8px 22px;border-radius:7px;font-size:13px;color:var(--z600);cursor:pointer;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.path.sel{background:var(--blue-50);color:var(--blue-700);font-weight:600}
+.path .badge{font-size:9.5px;padding:1px 7px}
+.itemrow{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--z200);border-radius:8px;margin-bottom:7px;background:var(--z50)}
+.itemrow.vrow{background:var(--green-100);border-color:#86EFAC}
+.itemrow .ty{font-family:var(--mono);font-size:9.5px;font-weight:600;color:var(--blue-700);width:52px;flex:none}
+.itemrow.vrow .ty{color:var(--green-800)}
+.itemrow .nm{font-size:13px;flex:1;min-width:0}
+.itemrow .ops{display:flex;gap:2px}
+.itemrow .ops button{color:var(--z400);padding:2px 6px;border-radius:5px;font-size:13px}
+.itemrow .ops button:hover{background:var(--z200);color:var(--z700)}
+.addrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.addrow button{border:1px dashed var(--z300);border-radius:7px;padding:6px 11px;font-size:12px;color:var(--z600)}
+.addrow button:hover{border-color:var(--blue);color:var(--blue-700)}
+.pubwarn{font-size:12.5px;color:var(--red);margin-top:10px;display:none}
+.pubwarn.show{display:block}
+.b-set .ln{font-size:12.5px;color:var(--z600);padding:4px 0;border-bottom:1px solid var(--z100)}
+.b-set .ln:last-child{border-bottom:none}
+.b-set .ln b{color:var(--z900);font-weight:600}
+
+/* ---------- leader ---------- */
+.l-grid{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start}
+.q-item{padding:16px 18px;border-bottom:1px solid var(--z100)}
+.q-item:last-child{border-bottom:none}
+.q-item .who{font-size:14px;font-weight:600}
+.q-item .what{font-size:13px;color:var(--z600);margin:2px 0 4px}
+.q-item .ctx{font-size:12.5px;color:var(--z500);background:var(--z50);border:1px solid var(--z100);border-radius:7px;padding:8px 12px;margin:8px 0 12px}
+.q-item .row{display:flex;gap:9px;flex-wrap:wrap}
+.q-item .row .btn{padding:8px 14px;font-size:13px}
+.q-empty{padding:26px;text-align:center;color:var(--z400);font-size:13.5px;display:none}
+.flag{display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--z100);font-size:13px}
+.flag:last-child{border-bottom:none}
+.flag .fdot{width:9px;height:9px;border-radius:99px;flex:none}
+
+/* ---------- event drawer ---------- */
+.drawer{position:fixed;bottom:0;left:0;right:0;background:var(--navy);color:#B8C1D1;z-index:40;font-family:var(--mono);font-size:11.5px}
+.drawer .dhead{display:flex;align-items:center;gap:10px;padding:8px 18px;cursor:pointer}
+.drawer .dhead .pulse{width:8px;height:8px;border-radius:99px;background:#4ADE80}
+.drawer .dhead b{color:#fff;font-weight:600;letter-spacing:.06em;font-size:11px}
+.drawer .dhead span{color:#67718A;font-size:10.5px}
+.drawer .dlog{display:none;max-height:150px;overflow:auto;padding:2px 18px 12px;border-top:1px solid #2A3444}
+.drawer.open .dlog{display:block}
+.drawer .ev{padding:3px 0;color:#8B95A7}
+.drawer .ev b{color:#7EA4F4;font-weight:500}
+
+@media(max-width:920px){
+  .app{grid-template-columns:1fr}
+  aside.side{display:none}
+  .home-grid,.l-grid{grid-template-columns:1fr}
+  .b-grid{grid-template-columns:1fr}
+  .content{padding:16px;padding-bottom:70px}
+  .q-item .row .btn{flex:1;text-align:center}
+  .btn{padding:13px 18px;min-height:44px}
+  .feed .chk{width:26px;height:26px;border-radius:7px}
+  .feed .item{padding:16px}
+  .switch button{padding:10px 12px;min-height:40px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="logo"><div class="mark">P</div><div><b>PCx</b><span>Career Path Demo</span></div></div>
+    <div class="grp">Agent's view</div>
+    <a href="#" class="on" id="nav-home" onclick="setRole('agent');return false"><span class="dot"></span>Home</a>
+    <a href="#" class="dim"><span class="dot"></span>Resources</a>
+    <a href="#" class="dim"><span class="dot"></span>My Business</a>
+    <a href="#" class="dim"><span class="dot"></span>My Team</a>
+    <div class="grp">Leadership</div>
+    <a href="#" id="nav-leader" onclick="setRole('leader');return false"><span class="dot"></span>Verifications</a>
+    <a href="#" id="nav-builder" onclick="setRole('builder');return false"><span class="dot"></span>Career Path Builder</a>
+  </aside>
+  <main>
+    <div class="topbar">
+      <span class="crumb" id="crumb">Agent · Sarah Johnson · Fundamentals</span>
+      <div class="spacer"></div>
+      <div class="switch" role="tablist" aria-label="View as">
+        <button id="sw-agent" class="on" onclick="setRole('agent')">Sarah · Agent</button>
+        <button id="sw-leader" onclick="setRole('leader')">Joe · Leader</button>
+        <button id="sw-builder" onclick="setRole('builder')">Builder</button>
+      </div>
+    </div>
+    <div class="content" id="view"></div>
+  </main>
+</div>
+
+<div class="drawer" id="drawer">
+  <div class="dhead" onclick="document.getElementById('drawer').classList.toggle('open')">
+    <div class="pulse"></div><b>UNDER THE HOOD</b><span>every action is an event · tap to expand</span>
+  </div>
+  <div class="dlog" id="dlog"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   Mock state. One source of truth; every view renders from it.
+   ============================================================ */
+const S = {
+  role: 'agent',
+  today: 'Tue Jul 7',
+  // Listing Basics is Sarah's focus certification: 9 items, 7 done.
+  cert: {
+    name: 'Listing Basics Certification',
+    quiz: { passed: true, score: 88, attempts: 2 },
+    mode: 'quiz + leader approval',
+    items: [
+      { id:'c1', ty:'VIDEO',  nm:'Pricing a listing', done:true },
+      { id:'c2', ty:'ACTION', nm:'Build a CMA for a real address', done:true },
+      { id:'c3', ty:'VIDEO',  nm:'The listing presentation', done:true },
+      { id:'c4', ty:'TASK',   nm:'Draft your listing presentation deck', done:true },
+      { id:'c5', ty:'VIDEO',  nm:'Handling the price objection', done:true },
+      { id:'c6', ty:'TASK',   nm:'Role-play the objection with a peer', done:true },
+      { id:'c7', ty:'QUIZ',   nm:'Listing fundamentals · pass 80%', done:true },
+      { id:'c8', ty:'VERIFY', nm:'Listing presentation, live with your leader', done:false, waiting:false },
+      { id:'c9', ty:'ACTION', nm:'Schedule two listing appointments', done:false }
+    ]
+  },
+  buyerBasics: { name:'Buyer Basics Certification', done:true },
+  tasks: [
+    { id:'t1', src:'personal', nm:'Update CRM pipeline stages', m:'personal task · was due yesterday', due:-1, done:false },
+    { id:'t2', src:'required', nm:'Team training call', m:'required · today 10:00a · Zoom', due:0, timed:true, done:false },
+    { id:'t3', src:'leader',   nm:'Call five database contacts', m:'assigned by Joe · due today', due:0, done:false },
+    { id:'t4', src:'personal', nm:'Order open house signs', m:'personal task · due Friday', due:3, done:false }
+  ],
+  t3690: { day:34, pct:62, waiting:['Submit business plan draft'] },
+  queue: [
+    { id:'q0', who:'Mike Torres', what:'Buyer Basics · Build a CMA for a real address', ctx:'Submitted a CMA for 4482 E Palo Verde Dr. Comps chosen from the last 90 days, adjustments noted in the file.', done:false }
+  ],
+  gateReady: false,
+  stageAdvanced: false,
+  events: []
+};
+
+/* ============================================================
+   The ranking engine. This is the real tier logic from the
+   solution design, running live. Not a hardcoded list.
+   Tier 1 overdue · 2 scheduled/due today · 3 leader asks
+   Tier 4 focus certification momentum · 5 personal/optional
+   ============================================================ */
+function rank() {
+  const out = [];
+  for (const t of S.tasks) {
+    if (t.done) continue;
+    let tier;
+    if (t.due < 0) tier = 1;
+    else if (t.due === 0 && (t.timed || t.src === 'required')) tier = 2;
+    else if (t.due === 0) tier = 2.5;                    // due today, after timed items
+    else if (t.src === 'leader') tier = 3;
+    else tier = 5;
+    out.push({ kind:'task', tier, sort:[t.due, t.src==='leader'?0:1], ref:t });
+  }
+  // focus certification: next workable item (waiting-on-leader is not an action)
+  const next = S.cert.items.find(i => !i.done && !i.waiting);
+  if (next) {
+    const workableLeft = S.cert.items.filter(i => !i.done && !i.waiting).length;
+    const gateInReach = workableLeft === 1;
+    out.push({ kind:'cert', tier: gateInReach ? 3.9 : 4, sort:[0,0], ref: next, gateInReach });
+  }
+  out.sort((a,b) => a.tier - b.tier || a.sort[0]-b.sort[0] || a.sort[1]-b.sort[1]);
+  return out;
+}
+
+const tierName = t =>
+  t === 1 ? 'T1 · overdue' : t < 3 ? 'T2 · today' : t === 3 ? 'T3 · leader' :
+  t < 4.1 ? 'T4 · career path' : 'T5 · personal';
+
+/* ---------- events ---------- */
+function emit(name, detail) {
+  const time = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  S.events.unshift(`${time}  <b>${name}</b>  ${detail}`);
+  const log = document.getElementById('dlog');
+  log.innerHTML = S.events.slice(0, 24).map(e => `<div class="ev">${e}</div>`).join('');
+}
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+/* ============================================================
+   Views
+   ============================================================ */
+function agentView() {
+  const feed = rank();
+  const hero = feed[0];
+  const rest = feed.slice(1);
+  const certDone = S.cert.items.filter(i => i.done).length;
+  const waitingItem = S.cert.items.find(i => i.waiting);
+
+  const heroHtml = hero ? `
+    <div class="hero">
+      <div class="mini">Your next action</div>
+      <h3>${hero.ref.nm}</h3>
+      <div class="meta">${hero.kind==='cert'
+        ? `${S.cert.name} · item ${certDone+1} of 9${hero.gateInReach ? '' : ''}`
+        : hero.ref.m}</div>
+      <div class="act">
+        ${hero.gateInReach ? '<span class="badge green">GATE IN REACH</span>' : ''}
+        <button class="btn" onclick="completeTop()">${hero.kind==='cert' && hero.ref.ty==='VERIFY' ? 'Done, submit for verification' : 'Mark complete'}</button>
+        <span class="why" onclick="this.parentElement.nextElementSibling.classList.toggle('open')">why is this first?</span>
+      </div>
+      <div class="whybox"><b>${tierName(hero.tier)}</b> · ${
+        hero.tier===1 ? 'A commitment is past due. Nothing outranks a broken commitment.' :
+        hero.tier<3 ? 'Scheduled and due-today items come before everything new.' :
+        hero.tier===3 ? 'Your leader asked. A coach’s ask never hides below the fold.' :
+        hero.tier<4.1 ? (hero.gateInReach ? 'One workable item stands between you and the Fundamentals gate.' : 'The next step in your focus certification.') :
+        'Your own task, ranked by due date.'} The order is the same five tiers every time, so the top card is always explainable.</div>
+    </div>` : '';
+
+  return `
+    <div class="h-row"><h1>Good morning, Sarah</h1><span class="badge blue">Fundamentals</span></div>
+    <div class="sub">${S.today} · Scottsdale office · ${feed.length} open item${feed.length===1?'':'s'}</div>
+    <div class="gatecard ${S.gateReady && !S.stageAdvanced ? 'show':''}">
+      <h3>Fundamentals gate is ready</h3>
+      <p>Buyer Basics and Listing Basics are both concluded. Joe has been notified; Mastery Skills opens on his confirmation.</p>
+    </div>
+    <div class="gatecard ${S.stageAdvanced ? 'show':''}">
+      <h3>Welcome to Mastery Skills</h3>
+      <p>Stage advanced. New learning paths are open on your Career page, and your feed re-ranks around them.</p>
+    </div>
+    <div class="home-grid">
+      <div>
+        ${heroHtml}
+        <div class="mini" style="margin:0 0 8px 2px">Then, in order</div>
+        <div class="card feed">
+          ${rest.map(f => `
+            <div class="item">
+              <div class="chk" onclick="completeItem('${f.kind}','${f.ref.id}')"></div>
+              <div class="grow"><div class="t">${f.ref.nm}</div>
+              <div class="m">${f.kind==='cert' ? S.cert.name+' · '+f.ref.ty.toLowerCase() : f.ref.m}</div></div>
+              <span class="tierchip">${tierName(f.tier)}</span>
+            </div>`).join('')}
+          ${waitingItem ? `
+            <div class="item waiting">
+              <div class="chk">⏳</div>
+              <div class="grow"><div class="t">${waitingItem.nm}</div>
+              <div class="m">submitted · waiting on Joe to verify · not counted as your action</div></div>
+              <span class="tierchip">waiting</span>
+            </div>`:''}
+          ${feed.length<=1 && !waitingItem ? `<div class="item"><div class="grow"><div class="t" style="color:var(--z500)">All caught up.</div><div class="m">Next suggestion: start Database Certification, the first open elective in your stage.</div></div></div>`:''}
+        </div>
+      </div>
+      <div class="rail">
+        <div class="card">
+          <h4>Listing Basics · focus</h4>
+          <div class="bar"><i style="width:${Math.round(certDone/9*100)}%"></i></div>
+          <div class="ln">${certDone} of 9 items · quiz passed ${S.cert.quiz.score}%</div>
+          <div class="ln">mode: ${S.cert.mode}</div>
+        </div>
+        <div class="card">
+          <h4>Career stage</h4>
+          <div class="stage-ln done"><span class="sdot"></span>Getting Set Up</div>
+          <div class="stage-ln ${S.stageAdvanced?'done':'cur'}"><span class="sdot"></span>Fundamentals</div>
+          <div class="stage-ln ${S.stageAdvanced?'cur':''}"><span class="sdot"></span>Mastery Skills</div>
+          <div class="stage-ln"><span class="sdot"></span>Wealth Building</div>
+          <div class="ln" style="margin-top:6px">Buyer Basics ✓ · Listing Basics ${S.gateReady||S.stageAdvanced?'✓':certDone+'/9'}</div>
+        </div>
+        <div class="card">
+          <h4>30-60-90 · day ${S.t3690.day}</h4>
+          <div class="bar"><i style="width:${S.t3690.pct}%"></i></div>
+          <div class="ln">${S.t3690.pct}% complete</div>
+          <div class="ln">${S.t3690.waiting.length} item waiting on verification</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function leaderView() {
+  const open = S.queue.filter(q => !q.done);
+  const flags = [];
+  if (open.length) flags.push(['#D97706', `Waiting on you · ${open.length} verification${open.length===1?'':'s'} pending`]);
+  if (S.gateReady && !S.stageAdvanced) flags.push(['#16A34A', 'Gate ready · Sarah Johnson · Fundamentals complete, confirm to advance']);
+  flags.push(['#DC2626', 'Stalled · Chandler South: 2 agents, no career path progress in 7 days']);
+
+  return `
+    <div class="h-row"><h1>Good morning, Joe</h1><span class="badge zinc">Scottsdale office</span></div>
+    <div class="sub">${S.today} · verification queue and today's attention list</div>
+    <div class="l-grid">
+      <div>
+        <div class="mini" style="margin:0 0 8px 2px">Verification queue</div>
+        <div class="card">
+          ${open.map(q => `
+            <div class="q-item">
+              <div class="who">${q.who}</div>
+              <div class="what">${q.what}</div>
+              <div class="ctx">${q.ctx}</div>
+              <div class="row">
+                <button class="btn" onclick="verify('${q.id}')">Verify</button>
+                <button class="btn ghost" onclick="sendBack('${q.id}')">Send back with note</button>
+              </div>
+            </div>`).join('')}
+          <div class="q-empty" style="display:${open.length?'none':'block'}">Queue clear. Verified work updates each agent's Home within seconds.</div>
+        </div>
+        ${S.gateReady && !S.stageAdvanced ? `
+        <div class="card" style="margin-top:14px;padding:16px 18px;border-color:#86EFAC;background:var(--green-100)">
+          <div class="who" style="font-weight:600;color:var(--green-800)">Sarah Johnson · Fundamentals gate ready</div>
+          <div class="what" style="color:var(--green-800);opacity:.8;margin:3px 0 10px">Both required certifications concluded. Confirm to open Mastery Skills.</div>
+          <button class="btn" style="background:var(--green)" onclick="advanceStage()">Confirm and advance stage</button>
+        </div>`:''}
+      </div>
+      <div class="rail">
+        <div class="card" style="padding:15px 17px">
+          <h4>Needs attention</h4>
+          ${flags.map(f => `<div class="flag"><span class="fdot" style="background:${f[0]}"></span>${f[1]}</div>`).join('')}
+        </div>
+        <div class="card" style="padding:15px 17px;margin-top:14px">
+          <h4>Why two taps matter</h4>
+          <div class="ln" style="line-height:1.55">Each decision here is one event. The agent's Home reorders, the certification updates, the gate check runs, and the audit log records it. Effortless verification is what keeps competency checkpoints real.</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function builderView() {
+  const actions = S.cert.items.filter(i => i.ty === 'ACTION' || i.ty === 'TASK').length;
+  const canPublish = actions > 0;
+  return `
+    <div class="h-row"><h1>Career Path Builder</h1><span class="badge zinc">Office: Scottsdale</span></div>
+    <div class="sub">Structure on the left, the selected certification's items in the middle, publish rules on the right.</div>
+    <div class="b-grid">
+      <div class="b-col"><div class="card">
+        <h4>Stages</h4>
+        <div class="stg"><div class="nm">1 · Getting Set Up</div><div class="ct">1 required path</div></div>
+        <div class="stg" style="background:var(--z50)"><div class="nm">2 · Fundamentals</div><div class="ct">2 required + electives</div></div>
+        <div class="path"><span>Buyer Basics</span><span class="badge green">required</span></div>
+        <div class="path sel"><span>Listing Basics</span><span class="badge green">required</span></div>
+        <div class="path"><span>Database Cert.</span><span class="badge zinc">elective</span></div>
+        <div class="stg"><div class="nm">3 · Mastery Skills</div><div class="ct">4 paths</div></div>
+        <div class="stg"><div class="nm">4 · Wealth Building</div><div class="ct">2 paths</div></div>
+      </div></div>
+      <div class="b-col"><div class="card">
+        <h4>Listing Basics · ${S.cert.items.length} items, ordered</h4>
+        ${S.cert.items.map((i, idx) => `
+          <div class="itemrow ${i.ty==='VERIFY'?'vrow':''}">
+            <span class="ty">${i.ty}</span><span class="nm">${i.nm}</span>
+            <span class="ops">
+              <button title="move up" onclick="moveItem(${idx},-1)">↑</button>
+              <button title="move down" onclick="moveItem(${idx},1)">↓</button>
+              <button title="remove" onclick="removeItem(${idx})">✕</button>
+            </span>
+          </div>`).join('')}
+        <div class="addrow">
+          <button onclick="addItem('VIDEO')">+ video</button>
+          <button onclick="addItem('ACTION')">+ action item</button>
+          <button onclick="addItem('TASK')">+ task</button>
+          <button onclick="addItem('QUIZ')">+ quiz</button>
+          <button onclick="addItem('VERIFY')">+ leader verification</button>
+        </div>
+        <div class="pubwarn ${canPublish?'':'show'}">A path cannot publish without at least one action item or task. Watching content is never progress by itself.</div>
+      </div></div>
+      <div class="b-col b-set"><div class="card">
+        <h4>Publish</h4>
+        <div class="ln">Mode: <b>quiz + leader approval</b> (both required)</div>
+        <div class="ln">Version <b>3 · draft</b></div>
+        <div class="ln">Enrolled agents keep <b>version 2</b></div>
+        <div class="ln">New enrollments get <b>version 3</b></div>
+        <div class="ln">Renames and reorders never reset progress</div>
+        <div class="ln">Pushing to enrolled agents shows a preview of exactly who is affected first</div>
+        <button class="btn" style="margin-top:12px;width:100%" ${canPublish?'':'disabled'} onclick="publish()">Publish version 3</button>
+      </div></div>
+    </div>`;
+}
+
+/* ============================================================
+   Interactions
+   ============================================================ */
+function render() {
+  const v = document.getElementById('view');
+  v.innerHTML = S.role==='agent' ? agentView() : S.role==='leader' ? leaderView() : builderView();
+  document.getElementById('crumb').textContent =
+    S.role==='agent' ? 'Agent · Sarah Johnson · '+(S.stageAdvanced?'Mastery Skills':'Fundamentals') :
+    S.role==='leader' ? 'Leadership · Joe · Scottsdale office' : 'Leadership · Career Path Builder';
+  ['agent','leader','builder'].forEach(r => {
+    document.getElementById('sw-'+r).classList.toggle('on', S.role===r);
+  });
+  document.getElementById('nav-home').classList.toggle('on', S.role==='agent');
+  document.getElementById('nav-leader').classList.toggle('on', S.role==='leader');
+  document.getElementById('nav-builder').classList.toggle('on', S.role==='builder');
+}
+function setRole(r){ S.role = r; render(); }
+
+function completeTop(){
+  const top = rank()[0];
+  if (top) completeItem(top.kind, top.ref.id);
+}
+function completeItem(kind, id){
+  if (kind === 'task') {
+    const t = S.tasks.find(t => t.id === id);
+    t.done = true;
+    emit('task.completed', `"${t.nm}" · Sarah Johnson`);
+    emit('home.feed.reordered', 'Sarah Johnson · rank() re-ran');
+    toast('Done. The feed re-ranked around what’s next.');
+  } else {
+    const i = S.cert.items.find(i => i.id === id);
+    if (i.ty === 'VERIFY') {
+      i.waiting = true;
+      S.queue.push({ id:'qS', who:'Sarah Johnson', what:'Listing Basics · Listing presentation, live with leader',
+        ctx:'Delivered the full listing presentation on the office call. Recording attached. Quiz already passed at 88% (2 attempts, logged).', done:false });
+      emit('item.submitted_for_verification', '"'+i.nm+'" · notifies Joe now');
+      toast('Submitted. Joe was notified; waiting on verification is not your action.');
+    } else {
+      i.done = true;
+      emit('task.completed', `certification item "${i.nm}"`);
+      checkCert();
+    }
+    emit('home.feed.reordered', 'Sarah Johnson · rank() re-ran');
+  }
+  render();
+}
+function verify(qid){
+  const q = S.queue.find(q => q.id === qid);
+  q.done = true;
+  emit('item.verified', `${q.who} · by Joe · audited`);
+  if (qid === 'qS') {
+    const i = S.cert.items.find(i => i.id === 'c8');
+    i.waiting = false; i.done = true;
+    emit('home.feed.reordered', 'Sarah Johnson · verified item unblocks the gate path');
+    checkCert();
+    toast('Verified. Sarah’s Home just reordered; the gate item is now on top.');
+  } else {
+    toast('Verified. '+q.who+'’s certification updated.');
+  }
+  render();
+}
+function sendBack(qid){
+  const q = S.queue.find(q => q.id === qid);
+  q.done = true;
+  if (qid === 'qS') { const i = S.cert.items.find(i => i.id==='c8'); i.waiting = false; }
+  emit('item.returned', `${q.who} · with a note · back in their feed`);
+  toast('Returned with a note. It goes back into their ranked feed, never into a void.');
+  render();
+}
+function checkCert(){
+  const allDone = S.cert.items.every(i => i.done);
+  if (allDone && S.cert.quiz.passed && !S.gateReady) {
+    S.gateReady = true;
+    emit('certification.concluded', 'Listing Basics · quiz + leader approval satisfied');
+    emit('gate.check', 'Fundamentals: Buyer Basics ✓ + Listing Basics ✓ → READY');
+  }
+}
+function advanceStage(){
+  S.stageAdvanced = true;
+  emit('stage.advanced', 'Sarah Johnson · Fundamentals → Mastery Skills · audited');
+  toast('Stage advanced. Sarah’s map and feed update everywhere at once.');
+  render();
+}
+function addItem(ty){
+  const names = {VIDEO:'New video · pick from the Learn library', ACTION:'New action item', TASK:'New task', QUIZ:'New quiz', VERIFY:'New leader verification checkpoint'};
+  S.cert.items.push({ id:'n'+Date.now(), ty, nm:names[ty], done:false });
+  emit('builder.item_added', ty+' · Listing Basics v3 draft');
+  render();
+}
+function removeItem(idx){
+  const it = S.cert.items[idx];
+  S.cert.items.splice(idx,1);
+  emit('builder.item_removed', it.ty+' "'+it.nm+'" · draft only, enrolled agents unaffected');
+  render();
+}
+function moveItem(idx,dir){
+  const j = idx + dir;
+  if (j < 0 || j >= S.cert.items.length) return;
+  [S.cert.items[idx], S.cert.items[j]] = [S.cert.items[j], S.cert.items[idx]];
+  render();
+}
+function publish(){
+  emit('template.pushed', 'Listing Basics v3 · new enrollments only · preview confirmed');
+  toast('Version 3 published for new enrollments. Enrolled agents keep v2 until you push, with a preview first.');
+}
+
+emit('demo.loaded', 'mock data · every view renders from one state object');
+render();
+</script>
+</body>
+</html>
