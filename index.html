@@ -95,6 +95,8 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
 .bar{height:4px;background:var(--z100);border-radius:99px;overflow:hidden;margin:8px 0 6px}
 .bar i{display:block;height:100%;background:var(--blue-bright);border-radius:99px;transition:width .5s}
 .rail .ln{font-size:12.5px;color:var(--z600);padding:3px 0}
+.rail .ln a{display:inline-block;padding:7px 9px;margin:-5px -3px;border-radius:6px}
+.rail .ln a:active{background:var(--z100)}
 .stage-ln{display:flex;align-items:center;gap:8px;font-size:12.5px;padding:3px 0;color:var(--z600)}
 .stage-ln .sdot{width:8px;height:8px;border-radius:99px;background:var(--z300);flex:none}
 .stage-ln.done .sdot{background:var(--green)}
@@ -243,10 +245,14 @@ const S = {
     { id:'t1', src:'personal', nm:'Update CRM pipeline stages', m:'personal task · was due yesterday', due:-1, done:false },
     { id:'t2', src:'required', nm:'Team training call', m:'required · today 10:00a · Zoom', due:0, timed:true, done:false },
     { id:'t3', src:'leader',   nm:'Call five database contacts', m:'assigned by Joe · due today', due:0, done:false },
-    { id:'t4', src:'personal', nm:'Order open house signs', m:'personal task · due Friday', due:3, done:false }
+    { id:'t4', src:'personal', nm:'Order open house signs', m:'personal task · due Friday', due:3, done:false },
+    { id:'t5', src:'required', nm:'Compliance attestation for Q3', m:'required · due Thursday', due:2, done:false }
   ],
   t3690: { day:34, pct:62 },
   dbEnrolled: false,
+  masteryStarted: false,
+  ver: 3,
+  lastLive: 2,
   newPaths: [],
   // Real per-agent state. Assignments create task objects here, not counter bumps.
   agents: {
@@ -288,7 +294,7 @@ function rank() {
     if (t.due < 0) tier = 1;
     else if (t.due === 0 && (t.timed || t.src === 'required')) tier = 2;
     else if (t.due === 0) tier = 2.5;                    // due today, after timed items
-    else if (t.src === 'leader') tier = 3;
+    else if (t.src === 'leader' || t.src === 'required') tier = 3;  // asks and requirements never sink to personal
     else tier = 5;
     out.push({ kind:'task', tier, sort:[t.due, t.src==='leader'?0:1], ref:t });
   }
@@ -307,7 +313,7 @@ const tierName = f => {
   const t = f.tier;
   if (t === 1) return 'T1 · overdue';
   if (t < 3) return f.ref && f.ref.src === 'leader' ? 'T2 · leader · today' : 'T2 · today';
-  if (t === 3) return 'T3 · leader';
+  if (t === 3) return f.ref && f.ref.src === 'required' ? 'T3 · required' : 'T3 · leader';
   return t < 4.1 ? 'T4 · career path' : 'T5 · personal';
 };
 
@@ -339,7 +345,7 @@ function agentView() {
       <div class="mini">&ldquo;What should I do today?&rdquo; &middot; your answer</div>
       <h3>${hero.ref.nm}</h3>
       <div class="meta">${hero.kind==='cert'
-        ? `${S.cert.name} · item ${S.cert.items.indexOf(hero.ref)+1} of ${S.cert.items.length}`
+        ? `${S.cert.name} · item ${S.cert.items.indexOf(hero.ref)+1} of ${S.cert.items.length}`+(hero.ref.note?` · sent back by Joe: &ldquo;${hero.ref.note}&rdquo;`:'')
         : hero.ref.m}</div>
       <div class="act">
         ${hero.gateInReach ? '<span class="badge green">GATE IN REACH</span>' : ''}
@@ -376,7 +382,7 @@ function agentView() {
             <div class="item">
               <div class="chk" onclick="completeItem('${f.kind}','${f.ref.id}')"></div>
               <div class="grow"><div class="t">${f.ref.nm}</div>
-              <div class="m">${f.kind==='cert' ? S.cert.name+' · '+f.ref.ty.toLowerCase() : f.ref.m}</div></div>
+              <div class="m">${f.kind==='cert' ? S.cert.name+' · '+f.ref.ty.toLowerCase()+(f.ref.note?' · sent back by Joe: &ldquo;'+f.ref.note+'&rdquo;':'') : f.ref.m}</div></div>
               <span class="tierchip">${tierName(f)}</span>
             </div>`).join('')}
           ${waitingItem ? `
@@ -417,7 +423,8 @@ function agentView() {
           <div class="stage-ln"><span class="sdot"></span>Wealth Building</div>
           <div class="ln" style="margin-top:6px">Buyer Basics ✓ · Listing Basics ${S.gateReady||S.stageAdvanced?'✓':certDone+'/'+S.cert.items.length}${S.dbEnrolled?' · Database enrolled':''}</div>
           ${!S.dbEnrolled && !S.stageAdvanced ? `<button class="btn ghost" style="margin-top:10px;width:100%;font-size:12.5px" onclick="enrollDb()">You choose your paths: start Database Certification</button>`:''}
-          ${S.stageAdvanced ? `<div class="ln" style="margin-top:6px">Now open: Buyer Mastery · Listing Mastery</div>`:''}
+          ${S.stageAdvanced ? `<div class="ln" style="margin-top:6px">Now open: Buyer Mastery · Listing Mastery</div>
+          ${!S.masteryStarted ? `<button class="btn ghost" style="margin-top:8px;width:100%;font-size:12.5px" onclick="startMastery()">Start Buyer Mastery</button>` : `<div class="ln">Buyer Mastery · enrolled</div>`}`:''}
         </div>
         <div class="card">
           <h4>30-60-90 · day ${S.t3690.day}</h4>
@@ -555,12 +562,12 @@ function builderView() {
       <div class="b-col b-set"><div class="card">
         <h4>Publish</h4>
         <div class="ln">Mode: <b>quiz + leader approval</b> (both required)</div>
-        <div class="ln">Version <b>3 · ${S.published?'published':'draft'}</b>${S.published?' <span class="badge green">live</span>':''}</div>
-        <div class="ln">Enrolled agents keep <b>version 2</b></div>
-        <div class="ln">New enrollments get <b>version ${S.published?'3':'3 (once published)'}</b></div>
-        <div class="ln">Renames and reorders never reset progress</div>
+        <div class="ln">Version <b>${S.ver} · ${S.published?'published':'draft'}</b>${S.published?' <span class="badge green">live</span>':''}</div>
+        <div class="ln">Enrolled agents keep <b>version ${S.lastLive}</b></div>
+        <div class="ln">New enrollments get <b>version ${S.published?S.ver:S.ver+' (once published)'}</b></div>
+        <div class="ln">Published versions are immutable; edits open the next draft</div>
         <div class="ln">Pushing to enrolled agents shows a preview of exactly who is affected first</div>
-        <button class="btn" style="margin-top:12px;width:100%" ${canPublish && !S.published?'':'disabled'} onclick="publish()">${S.published?'Version 3 is live':'Publish version 3'}</button>
+        <button class="btn" style="margin-top:12px;width:100%" ${canPublish && !S.published?'':'disabled'} onclick="publish()">${S.published?'Version '+S.ver+' is live':'Publish version '+S.ver}</button>
       </div></div>
     </div>`;
 }
@@ -598,10 +605,11 @@ function completeItem(kind, id){
     const i = S.cert.items.find(i => i.id === id);
     if (i.ty === 'VERIFY') {
       i.waiting = true;
-      // a resubmission replaces any earlier queue entry, never duplicates it
-      S.queue = S.queue.filter(q => q.id !== 'qS');
-      S.queue.push({ id:'qS', who:'Sarah Johnson', what:'Listing Basics · Listing presentation, live with leader',
-        ctx:'Delivered the full listing presentation on the office call. Recording attached. Quiz already passed at 88% (2 attempts, logged).', done:false });
+      // a resubmission replaces any earlier entry for the same person and item, never duplicates it
+      S.queue = S.queue.filter(q => !(q.who === 'Sarah Johnson' && q.itemId === i.id));
+      S.queue.push({ id:'qS', itemId: i.id, who:'Sarah Johnson', what:'Listing Basics · Listing presentation, live with leader',
+        ctx:'Delivered the full listing presentation on the office call. Recording attached. Quiz already passed at 88% (2 attempts, logged).'
+          + (i.note ? ' Resubmission after your note: "' + i.note + '"' : ''), done:false });
       emit('item.submitted_for_verification', '"'+i.nm+'" · notifies Joe now');
       toast('Submitted. Joe was notified; waiting on verification is not your action.');
     } else {
@@ -639,8 +647,9 @@ function sendBack(qid){
   if (qid === 'qS') {
     const i = S.cert.items.find(i => i.id==='c8');
     i.waiting = false;
+    i.note = note;   // the agent sees the note on the item itself, not in a void
   } else {
-    S.agents[q.who].tasks.push({ nm:'Rework: '+q.what.split('· ')[1], m:'sent back by Joe with a note', done:false });
+    S.agents[q.who].tasks.push({ nm:'Rework: '+q.what.split('· ')[1], m:'sent back by Joe: "'+note.slice(0,90)+'"', done:false });
   }
   emit('item.returned', `${q.who} · note: "${note.slice(0,60)}" · back in their feed`);
   toast('Returned with your note. It goes back into their ranked feed, never into a void.');
@@ -661,12 +670,14 @@ function advanceStage(){
   render();
 }
 function addItem(ty){
+  draftify();
   const names = {VIDEO:'New video · pick from the Learn library', ACTION:'New action item', TASK:'New task', QUIZ:'New quiz', VERIFY:'New leader verification checkpoint'};
   S.cert.items.push({ id:'n'+Date.now(), ty, nm:names[ty], done:false });
-  emit('builder.item_added', ty+' · Listing Basics v3 draft');
+  emit('builder.item_added', ty+' · Listing Basics v'+S.ver+' draft');
   render();
 }
 function removeItem(idx){
+  draftify();
   const it = S.cert.items[idx];
   S.cert.items.splice(idx,1);
   emit('builder.item_removed', it.ty+' "'+it.nm+'" · draft only, enrolled agents unaffected');
@@ -675,14 +686,33 @@ function removeItem(idx){
 function moveItem(idx,dir){
   const j = idx + dir;
   if (j < 0 || j >= S.cert.items.length) return;
+  draftify();
   [S.cert.items[idx], S.cert.items[j]] = [S.cert.items[j], S.cert.items[idx]];
+  render();
+}
+function startMastery(){
+  S.masteryStarted = true;
+  S.tasks.push({ id:'bm1', src:'personal', nm:'Buyer Mastery: shadow two buyer consultations', m:'Buyer Mastery Certification · first item', due:3, done:false });
+  emit('learning_path.enrolled', 'Buyer Mastery Certification · chosen by Sarah at stage entry');
+  emit('home.feed.reordered', 'Sarah Johnson · new path items join the ranking');
+  toast('Buyer Mastery started. Its first item just joined your ranked feed.');
   render();
 }
 function publish(){
   S.published = true;
-  emit('template.pushed', 'Listing Basics v3 · new enrollments only · preview confirmed');
-  toast('Version 3 published for new enrollments. Enrolled agents keep v2 until you push, with a preview first.');
+  S.lastLive = S.ver;
+  emit('template.pushed', 'Listing Basics v'+S.ver+' · new enrollments only · preview confirmed');
+  toast('Version '+S.ver+' published for new enrollments. Enrolled agents keep their version until you push, with a preview first.');
   render();
+}
+// published versions are immutable: any edit reopens a numbered draft
+function draftify(){
+  if (S.published) {
+    S.published = false;
+    S.ver++;
+    emit('builder.new_draft', 'edits reopen a draft · v'+S.ver+' · v'+S.lastLive+' stays live for enrolled agents');
+    toast('Version '+S.lastLive+' stays live and untouched. Your edits opened draft v'+S.ver+'.');
+  }
 }
 function addOwnTask(){
   const inp = document.getElementById('newtask');
