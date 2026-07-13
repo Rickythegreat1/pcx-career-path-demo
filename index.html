@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PCx Career Path · Working Demo</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23155DFC'/><text x='16' y='23' font-family='Arial,sans-serif' font-size='20' font-weight='700' fill='%23fff' text-anchor='middle'>P</text></svg>">
 <meta name="description" content="Interactive demo of the PCx Career Path system: the ranked Agent Home, the Career Path Builder, and leader verification, running as one connected loop.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,6 +26,8 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:var(--sans);background:var(--z100);color:var(--z900);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
 button{font-family:var(--sans);cursor:pointer;border:none;background:none;font-size:14px}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:3px}
+[role="button"]{cursor:pointer}
 
 /* ---------- app frame ---------- */
 .app{display:grid;grid-template-columns:256px 1fr;min-height:100vh}
@@ -64,7 +67,7 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
 .btn.dark{background:var(--z900)}
 .btn.dark:hover{background:var(--z800)}
 .btn:disabled{background:var(--z300);cursor:not-allowed}
-.mini{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--z400)}
+.mini{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--z500)}
 .toast{position:fixed;bottom:64px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--z900);color:#fff;padding:10px 18px;border-radius:9px;font-size:13.5px;opacity:0;transition:.25s;z-index:60;pointer-events:none;max-width:92vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
@@ -89,7 +92,7 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
 .feed .m{font-size:12px;color:var(--z500)}
 .feed .item.waiting{background:var(--z50)}
 .feed .item.waiting .chk{border-style:dashed;cursor:default;color:var(--z400)}
-.tierchip{font-family:var(--mono);font-size:9.5px;color:var(--z400);flex:none}
+.tierchip{font-family:var(--mono);font-size:9.5px;color:var(--z500);flex:none}
 .rail .card{padding:15px 17px;margin-bottom:14px}
 .rail h4{font-size:13.5px;font-weight:600;margin-bottom:8px}
 .bar{height:4px;background:var(--z100);border-radius:99px;overflow:hidden;margin:8px 0 6px}
@@ -118,14 +121,33 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
 .path{padding:8px 10px 8px 22px;border-radius:7px;font-size:13px;color:var(--z600);cursor:pointer;display:flex;justify-content:space-between;gap:8px;align-items:center}
 .path.sel{background:var(--blue-50);color:var(--blue-700);font-weight:600}
 .path .badge{font-size:9.5px;padding:1px 7px}
-.itemrow{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--z200);border-radius:8px;margin-bottom:7px;background:var(--z50)}
+.reorder-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+.reorder-head h4{margin-bottom:0}
+.reorder-hint{font-size:10.5px;color:var(--z500);text-align:right;line-height:1.35}
+.reorder-list{position:relative;list-style:none;margin:0;padding:0}
+.itemrow{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--z200);border-radius:8px;margin-bottom:7px;background:var(--z50);position:relative;transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .18s,border-color .18s,opacity .18s,background .18s}
+.itemrow:hover:not(.dragging){transform:translateY(-1px);box-shadow:0 5px 14px #1018280d;border-color:var(--z300)}
 .itemrow.vrow{background:var(--green-100);border-color:#86EFAC}
+.itemrow.dragging{opacity:.2;transform:scale(.985);box-shadow:none}
+.itemrow.drop-before::before,.itemrow.drop-after::after{content:"Drop here";position:absolute;left:8px;right:8px;height:2px;background:var(--blue);color:var(--blue-700);font:600 9px var(--mono);letter-spacing:.04em;line-height:0;padding-left:10px;z-index:4;box-shadow:0 0 0 4px var(--blue-50)}
+.itemrow.drop-before::before{top:-5px}
+.itemrow.drop-after::after{bottom:-5px}
+.itemrow.preview-target{border-color:var(--blue-200);background:#fff;box-shadow:0 0 0 3px var(--blue-50)}
+.itemrow.reorder-ghost{position:absolute;z-index:8;pointer-events:none;margin:0;opacity:0;transform:translateY(8px) scale(.99);border:1.5px solid var(--blue);background:color-mix(in srgb,#fff 88%,var(--blue-50));box-shadow:0 14px 34px #155dfc26,0 2px 8px #10182814}
+.itemrow.reorder-ghost.show{opacity:.82;transform:translateY(0) scale(1)}
+.grip{width:32px;height:32px;flex:none;display:grid;place-items:center;color:var(--z400);border-radius:7px;cursor:grab;font-size:15px;letter-spacing:-4px;padding-right:4px;touch-action:none;user-select:none}
+.grip:hover{color:var(--blue-700);background:var(--blue-50)}
+.grip:active{cursor:grabbing}
+.pointer-drag-ghost{position:fixed!important;z-index:100;pointer-events:none;margin:0!important;opacity:.94;transform:rotate(.35deg) scale(1.015);border-color:var(--blue)!important;background:#fff!important;box-shadow:0 18px 42px #10182824,0 4px 12px #155dfc22!important}
 .itemrow .ty{font-family:var(--mono);font-size:9.5px;font-weight:600;color:var(--blue-700);width:52px;flex:none}
 .itemrow.vrow .ty{color:var(--green-800)}
 .itemrow .nm{font-size:13px;flex:1;min-width:0}
 .itemrow .ops{display:flex;gap:2px}
-.itemrow .ops button{color:var(--z400);padding:2px 6px;border-radius:5px;font-size:13px}
-.itemrow .ops button:hover{background:var(--z200);color:var(--z700)}
+.itemrow .ops button{color:var(--z400);width:32px;height:32px;display:grid;place-items:center;border-radius:6px;font-size:13px;transition:transform .16s,background .16s,color .16s}
+.itemrow .ops button:hover:not(:disabled){background:var(--z200);color:var(--z700)}
+.itemrow .ops button:active:not(:disabled){transform:scale(.88)}
+.itemrow .ops button:disabled{opacity:.3;cursor:not-allowed}
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 .addrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .addrow button{border:1px dashed var(--z300);border-radius:7px;padding:6px 11px;font-size:12px;color:var(--z600)}
 .addrow button:hover{border-color:var(--blue);color:var(--blue-700)}
@@ -166,18 +188,25 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
   .home-grid,.l-grid{grid-template-columns:1fr}
   .b-grid{grid-template-columns:1fr}
   .content{padding:16px;padding-bottom:70px}
+  body.drawer-open .content{padding-bottom:200px}
   .q-item .row .btn{flex:1;text-align:center}
   .btn{padding:13px 18px;min-height:44px;font-size:13px}
-  .feed .chk{width:22px;height:22px;border-radius:6px}
+  .feed .chk{width:44px;height:44px;border-radius:8px}
   .feed .item{padding:16px}
-  .switch button{padding:10px 12px;min-height:40px}
+  .grip,.itemrow .ops button{width:44px;height:44px}
+  .switch button{padding:10px 12px;min-height:44px}
+  .itemrow .ops button,.grip{min-width:40px;min-height:40px}
+  .reorder-hint{max-width:150px}
 }
 @media(max-width:560px){
-  .topbar{padding:10px 14px}
+  .topbar{padding:10px 14px;flex-wrap:wrap}
   .topbar .crumb{display:none}
-  .switch{flex:1;min-width:0}
-  .switch button{flex:1;padding:9px 4px;font-size:11px;min-height:40px}
+  .topbar .mini{display:none}
+  .topbar .spacer{display:none}
+  .switch{flex:1 0 100%;min-width:0}
+  .switch button{flex:1;padding:9px 4px;font-size:11px;min-height:44px}
 }
+@media(prefers-reduced-motion:reduce){.itemrow,.itemrow .ops button,.toast,.reorder-ghost{transition:none!important}.gatecard.show{animation:none}.pointer-drag-ghost{transform:none}}
 </style>
 </head>
 <body>
@@ -185,23 +214,24 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
   <aside class="side">
     <div class="logo"><div class="mark">P</div><div><b>PCx</b><span>Career Path Demo</span></div></div>
     <div class="grp">Agent's view</div>
-    <a href="#" class="on" id="nav-home" onclick="setRole('agent');return false"><svg viewBox="0 0 24 24"><path d="M3 9.5 12 3l9 6.5V20a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20Z"/><path d="M9 21.5V12h6v9.5"/></svg>Home</a>
-    <a href="#" class="dim"><svg viewBox="0 0 24 24"><path d="M2 3.5h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2Z"/><path d="M22 3.5h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7Z"/></svg>Resources</a>
-    <a href="#" class="dim"><svg viewBox="0 0 24 24"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>My Business</a>
-    <a href="#" class="dim"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>My Team</a>
+    <a href="#" class="on" id="nav-home" onclick="setRole('agent');return false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9.5 12 3l9 6.5V20a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20Z"/><path d="M9 21.5V12h6v9.5"/></svg>Home</a>
+    <a href="#" class="dim"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 3.5h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2Z"/><path d="M22 3.5h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7Z"/></svg>Resources</a>
+    <a href="#" class="dim"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>My Business</a>
+    <a href="#" class="dim"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>My Team</a>
     <div class="grp">Leadership</div>
-    <a href="#" id="nav-leader" onclick="setRole('leader');return false"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/></svg>Verifications</a>
-    <a href="#" id="nav-builder" onclick="setRole('builder');return false"><svg viewBox="0 0 24 24"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>Career Path Builder</a>
+    <a href="#" id="nav-leader" onclick="setRole('leader');return false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/></svg>Verifications</a>
+    <a href="#" id="nav-builder" onclick="setRole('builder');return false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>Career Path Builder</a>
   </aside>
   <main>
     <div class="topbar">
       <span class="crumb" id="crumb">Agent · Sarah Johnson · Fundamentals</span>
+      <span class="badge zinc" style="flex:none" title="Single-file interactive mock. State lives in this page and resets on refresh.">mock demo · no backend</span>
       <div class="spacer"></div>
       <span class="mini" style="flex:none">View as</span>
-      <div class="switch" role="tablist" aria-label="View as">
-        <button id="sw-agent" class="on" onclick="setRole('agent')">Sarah · Agent</button>
-        <button id="sw-leader" onclick="setRole('leader')">Joe · Leader</button>
-        <button id="sw-builder" onclick="setRole('builder')">Builder</button>
+      <div class="switch" role="group" aria-label="View as">
+        <button id="sw-agent" class="on" aria-pressed="true" onclick="setRole('agent')">Sarah · Agent</button>
+        <button id="sw-leader" aria-pressed="false" onclick="setRole('leader')">Joe · Leader</button>
+        <button id="sw-builder" aria-pressed="false" onclick="setRole('builder')">Builder</button>
       </div>
     </div>
     <div class="content" id="view"></div>
@@ -209,7 +239,7 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
 </div>
 
 <div class="drawer" id="drawer">
-  <div class="dhead" onclick="document.getElementById('drawer').classList.toggle('open')">
+  <div class="dhead" role="button" tabindex="0" aria-expanded="false" aria-controls="dlog" onclick="toggleDrawer()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleDrawer()}">
     <div class="pulse"></div><b>UNDER THE HOOD</b><span>every action is an event · tap to expand</span>
   </div>
   <div class="dlog" id="dlog"></div>
@@ -222,7 +252,7 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
    ============================================================ */
 const S = {
   role: 'agent',
-  today: 'Tue Jul 7',
+  today: 'Demo day',
   // Listing Basics is Sarah's focus certification: 9 items, 7 done.
   cert: {
     name: 'Listing Basics Certification',
@@ -232,27 +262,32 @@ const S = {
       { id:'c1', ty:'VIDEO',  nm:'Pricing a listing', done:true },
       { id:'c2', ty:'ACTION', nm:'Build a CMA for a real address', done:true },
       { id:'c3', ty:'VIDEO',  nm:'The listing presentation', done:true },
-      { id:'c4', ty:'TASK',   nm:'Draft your listing presentation deck', done:true },
+      { id:'c4', ty:'TASK',   taskId:'ct4', pri:'High', nm:'Draft your listing presentation deck', done:true },
       { id:'c5', ty:'VIDEO',  nm:'Handling the price objection', done:true },
-      { id:'c6', ty:'TASK',   nm:'Role-play the objection with a peer', done:true },
+      { id:'c6', ty:'TASK',   taskId:'ct6', pri:'High', nm:'Role-play the objection with a peer', done:true },
       { id:'c7', ty:'QUIZ',   nm:'Listing fundamentals · pass 80%', done:true },
-      { id:'c8', ty:'VERIFY', nm:'Listing presentation, live with your leader', done:false, waiting:false },
-      { id:'c9', ty:'ACTION', nm:'Schedule two listing appointments', done:false }
+      { id:'c9', ty:'ACTION', nm:'Schedule two listing appointments', done:false },
+      { id:'c8', ty:'VERIFY', nm:'Listing presentation, live with your leader', done:false, waiting:false }
     ]
   },
-  buyerBasics: { name:'Buyer Basics Certification', done:true },
+  buyerBasics: { name:'Buyer Basics Certification', done:true, itemsDone:9, itemsTotal:9, quiz:'passed 91%', verifiedBy:'Joe' },
   tasks: [
-    { id:'t1', src:'personal', nm:'Update CRM pipeline stages', m:'personal task · was due yesterday', due:-1, done:false },
-    { id:'t2', src:'required', nm:'Team training call', m:'required · today 10:00a · Zoom', due:0, timed:true, done:false },
-    { id:'t3', src:'leader',   nm:'Call five database contacts', m:'assigned by Joe · due today', due:0, done:false },
-    { id:'t4', src:'personal', nm:'Order open house signs', m:'personal task · due Friday', due:3, done:false },
-    { id:'t5', src:'required', nm:'Compliance attestation for Q3', m:'required · due Thursday', due:2, done:false }
+    { id:'t1', src:'personal', pri:'Medium',   nm:'Update CRM pipeline stages', m:'personal task · was due yesterday', due:-1, done:false },
+    { id:'t2', src:'required', pri:'High',     nm:'Team training call', m:'required · today 10:00a · Zoom', due:0, timed:true, done:false },
+    { id:'t3', src:'leader',   pri:'High',     nm:'Call five database contacts', m:'assigned by Joe · due today', due:0, done:false },
+    { id:'t4', src:'personal', pri:'Low',      nm:'Order open house signs', m:'personal task · due Friday', due:3, done:false },
+    { id:'t5', src:'required', pri:'Critical', nm:'Compliance attestation for Q3', m:'required · due Thursday', due:2, done:false },
+    { id:'ct4', certItemId:'c4', src:'career', focus:true, pri:'High', nm:'Draft your listing presentation deck', m:'Listing Basics Certification · task item', due:0, done:true },
+    { id:'ct6', certItemId:'c6', src:'career', focus:true, pri:'High', nm:'Role-play the objection with a peer', m:'Listing Basics Certification · task item', due:0, done:true }
   ],
   t3690: { day:34, pct:62 },
   dbEnrolled: false,
   masteryStarted: false,
+  secondMastery: false,
   ver: 3,
   lastLive: 2,
+  draft: null,   // builder edits land here; enrolled agents' items are never mutated
+  publishedVersions: {}, // immutable item snapshots keyed by published version
   newPaths: [],
   // Real per-agent state. Assignments create task objects here, not counter bumps.
   agents: {
@@ -277,15 +312,27 @@ const S = {
   events: []
 };
 
+S.publishedVersions[S.lastLive] = Object.freeze(
+  S.cert.items.map(item => Object.freeze({ ...item }))
+);
+
 /* ============================================================
-   The ranking engine. This is the real tier logic from the
+   The ranking engine. This is the real policy from the
    solution design, running live. Not a hardcoded list.
+   Urgency class first (the five tiers):
    Tier 1 overdue
    Tier 2 due today: scheduled/required first, then leader asks,
           then the agent's own (2.5 = unscheduled today items)
-   Tier 3 leader asks due on a later date
-   Tier 4 focus certification momentum · 5 personal/optional
+   Tier 3 leader asks / requirements due on a later date
+   Tier 4 focus certification momentum · 5 personal/electives
+   Inside a tier: the task's documented Priority
+   (Critical/High/Medium/Low, from the Task Engine document) sorts
+   comparable tasks, then due date, then leader-before-self.
+   TASK-typed certification items retain Task Engine Priority;
+   non-task learning items do not. Path sequence still selects
+   the next certification action.
    ============================================================ */
+const PRI_RANK = { Critical: 0, High: 1, Medium: 2, Low: 3 };
 function rank() {
   const out = [];
   for (const t of S.tasks) {
@@ -295,17 +342,22 @@ function rank() {
     else if (t.due === 0 && (t.timed || t.src === 'required')) tier = 2;
     else if (t.due === 0) tier = 2.5;                    // due today, after timed items
     else if (t.src === 'leader' || t.src === 'required') tier = 3;  // asks and requirements never sink to personal
+    else if (t.src === 'career') tier = t.focus ? 4 : 5; // career-path tasks: focus path rides tier 4, electives tier 5
     else tier = 5;
-    out.push({ kind:'task', tier, sort:[t.due, t.src==='leader'?0:1], ref:t });
+    // Career Path TASK items are Task Engine objects and retain Priority.
+    // Non-task learning items stay in the certification structure.
+    out.push({ kind:'task', tier, sort:[t.src==='career' ? 4 : (PRI_RANK[t.pri] ?? 2), t.due, t.src==='leader'?0:1], ref:t });
   }
   // focus certification: next workable item (waiting-on-leader is not an action)
   const next = S.cert.items.find(i => !i.done && !i.waiting);
   if (next) {
     const workableLeft = S.cert.items.filter(i => !i.done && !i.waiting).length;
     const gateInReach = workableLeft === 1;
-    out.push({ kind:'cert', tier: gateInReach ? 3.9 : 4, sort:[0,0], ref: next, gateInReach });
+    // gate-in-reach tops the career tier (tier 4), exactly as the design's tier table says;
+    // it never jumps above tier 3 leader asks or required activities
+    out.push({ kind:'cert', tier: 4, sort:[gateInReach ? -1 : 0, 0, 0], ref: next, gateInReach });
   }
-  out.sort((a,b) => a.tier - b.tier || a.sort[0]-b.sort[0] || a.sort[1]-b.sort[1]);
+  out.sort((a,b) => a.tier - b.tier || a.sort[0]-b.sort[0] || a.sort[1]-b.sort[1] || (a.sort[2]||0)-(b.sort[2]||0));
   return out;
 }
 
@@ -314,10 +366,17 @@ const tierName = f => {
   if (t === 1) return 'T1 · overdue';
   if (t < 3) return f.ref && f.ref.src === 'leader' ? 'T2 · leader · today' : 'T2 · today';
   if (t === 3) return f.ref && f.ref.src === 'required' ? 'T3 · required' : 'T3 · leader';
-  return t < 4.1 ? 'T4 · career path' : 'T5 · personal';
+  if (t < 4.1) return 'T4 · career path';
+  return f.ref && f.ref.src === 'career' ? 'T5 · elective' : 'T5 · personal';
 };
+const priTag = ref => ref && ref.pri ? ' · ' + ref.pri.toLowerCase() + ' priority' : '';
 
 /* ---------- events ---------- */
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, char => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+  })[char]);
+}
 function emit(name, detail) {
   const time = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
   S.events.unshift(`${time}  <b>${name}</b>  ${detail}`);
@@ -346,32 +405,38 @@ function agentView() {
       <h3>${hero.ref.nm}</h3>
       <div class="meta">${hero.kind==='cert'
         ? `${S.cert.name} · item ${S.cert.items.indexOf(hero.ref)+1} of ${S.cert.items.length}`+(hero.ref.note?` · sent back by Joe: &ldquo;${hero.ref.note}&rdquo;`:'')
-        : hero.ref.m}</div>
+        : hero.ref.m + priTag(hero.ref)}</div>
       <div class="act">
         ${hero.gateInReach ? '<span class="badge green">GATE IN REACH</span>' : ''}
         <button class="btn" onclick="completeTop()">${hero.kind==='cert' && hero.ref.ty==='VERIFY' ? 'Done, submit for verification' : 'Mark complete'}</button>
-        <span class="why" onclick="this.parentElement.nextElementSibling.classList.toggle('open')">why is this first?</span>
+        <span class="why" role="button" tabindex="0" aria-expanded="false" onclick="toggleWhy(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleWhy(this)}">why is this first?</span>
       </div>
       <div class="whybox"><b>${tierName(hero)}</b> · ${
         hero.tier===1 ? 'A commitment is past due. Nothing outranks a broken commitment.' :
         hero.tier<3 ? (hero.ref.src==='leader'
-          ? 'Joe asked, and it is due today. A leader ask due today ranks right behind scheduled events, ahead of everything else.'
-          : 'Scheduled and due-today items come before everything new.') :
-        hero.tier===3 ? 'Your leader asked. A coach’s ask never hides below the fold.' :
+          ? 'Joe asked, and it is due today. It ranks right behind scheduled events, ordered with the rest of today’s work by its priority.'
+          : (hero.ref.timed || hero.ref.src==='required'
+            ? 'Scheduled and due-today items come before everything new.'
+            : 'Due today, so it ranks with the day’s work, right after anything scheduled.')) :
+        hero.tier===3 ? (hero.ref.src==='required' ? 'A required activity is coming due. Requirements never sink below personal work.' : 'Your leader asked. A coach’s ask never hides below the fold.') :
         hero.tier<4.1 ? (hero.gateInReach ? 'One workable item stands between you and the Fundamentals gate.' : 'The next step in your focus certification.') :
-        'Your own task, ranked by due date.'} The order is the same five tiers every time, so the top card is always explainable.</div>
+        (hero.ref.src==='career'
+          ? 'The next step in a non-focus certification. Electives rank after your dated personal work.'
+          : 'Your own task, ranked by priority and due date.')} The order is the same five urgency tiers every time; ${hero.kind==='cert' || hero.ref.src==='career'
+        ? 'non-task certification items carry no Task Priority; TASK items retain it in the Task Engine, while the path&rsquo;s sequence selects the next certification action'
+        : 'inside a tier, the task&rsquo;s priority (Critical, High, Medium, Low) sorts first, then due dates'}. The top card is always explainable.</div>
     </div>` : '';
 
   return `
-    <div class="h-row"><h1>Good morning, Sarah</h1><span class="badge blue">Fundamentals</span></div>
+    <div class="h-row"><h1>Good morning, Sarah</h1><span class="badge blue">${S.stageAdvanced?'Mastery Skills':'Fundamentals'}</span></div>
     <div class="sub">${S.today} · Scottsdale office · day ${S.t3690.day} of Sarah's plan (the demo starts mid-journey) · ${feed.length} open item${feed.length===1?'':'s'}</div>
-    <div class="gatecard ${S.gateReady && !S.stageAdvanced ? 'show':''}">
-      <h3>Fundamentals gate is ready</h3>
-      <p>Buyer Basics and Listing Basics are both concluded. Joe has been notified; Mastery Skills opens on his confirmation.</p>
-    </div>
     <div class="gatecard ${S.stageAdvanced ? 'show':''}">
       <h3>Welcome to Mastery Skills</h3>
-      <p>Stage advanced. New learning paths are open on your Career page, and your feed re-ranks around them.</p>
+      <p>Buyer Basics and Listing Basics both concluded, so the Fundamentals gate passed the moment Joe verified your listing presentation. Joe was notified. ${S.masteryStarted ? 'Your new focus: '+S.masteryStarted+'.' : 'New paths are open; choose what you lead with:'}</p>
+      ${!S.masteryStarted ? `<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button class="btn" style="flex:1;min-width:150px" onclick="startMastery('Buyer Mastery')">Lead with Buyer Mastery</button>
+        <button class="btn" style="flex:1;min-width:150px" onclick="startMastery('Listing Mastery')">Lead with Listing Mastery</button>
+      </div>` : ''}
     </div>
     <div class="home-grid">
       <div>
@@ -380,9 +445,9 @@ function agentView() {
         <div class="card feed">
           ${rest.map(f => `
             <div class="item">
-              <div class="chk" onclick="completeItem('${f.kind}','${f.ref.id}')"></div>
+              <div class="chk" role="button" tabindex="0" aria-label="Mark done: ${f.ref.nm}" onclick="completeItem('${f.kind}','${f.ref.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();completeItem('${f.kind}','${f.ref.id}')}"></div>
               <div class="grow"><div class="t">${f.ref.nm}</div>
-              <div class="m">${f.kind==='cert' ? S.cert.name+' · '+f.ref.ty.toLowerCase()+(f.ref.note?' · sent back by Joe: &ldquo;'+f.ref.note+'&rdquo;':'') : f.ref.m}</div></div>
+              <div class="m">${f.kind==='cert' ? S.cert.name+' · '+f.ref.ty.toLowerCase()+(f.ref.note?' · sent back by Joe: &ldquo;'+f.ref.note+'&rdquo;':'') : f.ref.m + priTag(f.ref)}</div></div>
               <span class="tierchip">${tierName(f)}</span>
             </div>`).join('')}
           ${waitingItem ? `
@@ -392,14 +457,18 @@ function agentView() {
               <div class="m">submitted · waiting on Joe to verify · not counted as your action</div></div>
               <span class="tierchip">waiting</span>
             </div>`:''}
-          ${feed.length<=1 && !waitingItem ? `<div class="item"><div class="grow"><div class="t" style="color:var(--z500)">All caught up.</div><div class="m">Next suggestion: start Database Certification, the first open elective in your stage.</div></div></div>`:''}
+          ${feed.length===0 && !waitingItem ? `<div class="item"><div class="grow"><div class="t" style="color:var(--z500)">All caught up.</div><div class="m">${S.stageAdvanced && !S.masteryStarted ? 'Next suggestion: choose what you lead with in Mastery Skills, above.' : S.stageAdvanced ? 'Next suggestion: keep working '+S.masteryStarted+'; its next item lands here.' : 'Next suggestion: start Database Certification, the first open elective in your stage.'}</div></div></div>`:''}
+          ${feed.length===1 && !waitingItem ? `<div class="item"><div class="grow"><div class="m" style="color:var(--z400)">Nothing else in line after the card above.</div></div></div>`:''}
         </div>
         <div class="card" style="margin-top:14px;padding:13px 16px">
           <div class="mini" style="margin-bottom:8px">Add your own task</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <input id="newtask" placeholder="e.g. Prep Saturday open house" style="flex:1;min-width:180px;border:1px solid var(--z300);border-radius:8px;padding:9px 12px;font-size:13.5px;font-family:var(--sans)">
-            <select id="newtaskdue" style="border:1px solid var(--z300);border-radius:8px;padding:9px 10px;font-size:13px;font-family:var(--sans);background:#fff">
+            <input id="newtask" aria-label="New task name" placeholder="e.g. Prep Saturday open house" style="flex:1;min-width:180px;border:1px solid var(--z300);border-radius:8px;padding:9px 12px;font-size:13.5px;font-family:var(--sans)">
+            <select id="newtaskdue" aria-label="Due" style="border:1px solid var(--z300);border-radius:8px;padding:9px 10px;font-size:13px;font-family:var(--sans);background:#fff">
               <option value="0">due today</option><option value="3" selected>this week</option>
+            </select>
+            <select id="newtaskpri" aria-label="Priority" style="border:1px solid var(--z300);border-radius:8px;padding:9px 10px;font-size:13px;font-family:var(--sans);background:#fff">
+              <option>Critical</option><option>High</option><option selected>Medium</option><option>Low</option>
             </select>
             <button class="btn dark" onclick="addOwnTask()">Add task</button>
           </div>
@@ -407,7 +476,8 @@ function agentView() {
       </div>
       <div class="rail">
         <div class="card">
-          <h4>Listing Basics · focus</h4>
+          <h4>Listing Basics · ${S.gateReady||S.stageAdvanced ? 'concluded ✓' : 'focus'}</h4>
+          ${!S.stageAdvanced ? '<div class="ln" style="font-size:11.5px;color:var(--z400)">Sarah&rsquo;s pick at Fundamentals entry; Buyer Basics ran alongside it</div>' : ''}
           <div class="bar"><i style="width:${Math.round(certDone/S.cert.items.length*100)}%"></i></div>
           <div class="ln">${certDone} of ${S.cert.items.length} items · <a href="#" style="color:var(--blue-700)" onclick="S.quizOpen=!S.quizOpen;render();return false">quiz passed ${S.cert.quiz.score}% ${S.quizOpen?'▾':'▸'}</a></div>
           ${S.quizOpen?`<div class="ln" style="font-family:var(--mono);font-size:11.5px;background:var(--z50);border-radius:7px;padding:8px 10px;margin:4px 0">
@@ -421,10 +491,14 @@ function agentView() {
           <div class="stage-ln ${S.stageAdvanced?'done':'cur'}"><span class="sdot"></span>Fundamentals</div>
           <div class="stage-ln ${S.stageAdvanced?'cur':''}"><span class="sdot"></span>Mastery Skills</div>
           <div class="stage-ln"><span class="sdot"></span>Wealth Building</div>
-          <div class="ln" style="margin-top:6px">Buyer Basics ✓ · Listing Basics ${S.gateReady||S.stageAdvanced?'✓':certDone+'/'+S.cert.items.length}${S.dbEnrolled?' · Database enrolled':''}</div>
-          ${!S.dbEnrolled && !S.stageAdvanced ? `<button class="btn ghost" style="margin-top:10px;width:100%;font-size:12.5px" onclick="enrollDb()">You choose your paths: start Database Certification</button>`:''}
+          <div class="ln" style="margin-top:6px">Buyer Basics ✓ <span title="${S.buyerBasics.itemsDone}/${S.buyerBasics.itemsTotal} items · quiz ${S.buyerBasics.quiz} · verified by ${S.buyerBasics.verifiedBy}" style="color:var(--z400);font-size:11px">(${S.buyerBasics.itemsDone}/${S.buyerBasics.itemsTotal} · verified)</span> · Listing Basics ${S.gateReady||S.stageAdvanced?'✓':certDone+'/'+S.cert.items.length}${S.dbEnrolled?' · Database enrolled':''}</div>
+          ${!S.dbEnrolled && !S.stageAdvanced ? `<button class="btn ghost" style="margin-top:10px;width:100%;font-size:12.5px" onclick="enrollDb()">Start an elective: Database Certification</button>`:''}
           ${S.stageAdvanced ? `<div class="ln" style="margin-top:6px">Now open: Buyer Mastery · Listing Mastery</div>
-          ${!S.masteryStarted ? `<button class="btn ghost" style="margin-top:8px;width:100%;font-size:12.5px" onclick="startMastery()">Start Buyer Mastery</button>` : `<div class="ln">Buyer Mastery · enrolled</div>`}`:''}
+          ${!S.masteryStarted ? `
+          <div class="ln" style="margin-top:4px;color:var(--z500)">Your choice sets your new focus:</div>
+          <button class="btn ghost" style="margin-top:6px;width:100%;font-size:12.5px" onclick="startMastery('Buyer Mastery')">Lead with Buyer Mastery</button>
+          <button class="btn ghost" style="margin-top:6px;width:100%;font-size:12.5px" onclick="startMastery('Listing Mastery')">Lead with Listing Mastery</button>` : `<div class="ln">${S.masteryStarted} · your focus</div>
+          ${!S.secondMastery ? `<button class="btn ghost" style="margin-top:6px;width:100%;font-size:12.5px" onclick="startSecondMastery()">Also start ${S.masteryStarted==='Buyer Mastery'?'Listing Mastery':'Buyer Mastery'} alongside it</button>` : `<div class="ln">${S.secondMastery} · active alongside your focus</div>`}`}`:''}
         </div>
         <div class="card">
           <h4>30-60-90 · day ${S.t3690.day}</h4>
@@ -439,10 +513,11 @@ function agentView() {
 function openCount(name){ return S.agents[name].tasks.filter(t => !t.done).length; }
 
 function leaderView() {
-  const open = S.queue.filter(q => !q.done);
+  // newest submission on top: the queue surfaces what just arrived
+  const open = S.queue.filter(q => !q.done).slice().reverse();
   const flags = [];
   if (open.length) flags.push(['#E17100', `Waiting on you · ${open.length} verification${open.length===1?'':'s'} pending`]);
-  if (S.gateReady && !S.stageAdvanced) flags.push(['#00A63E', 'Gate ready · Sarah Johnson · Fundamentals complete, confirm to advance']);
+  if (S.stageAdvanced) flags.push(['#00A63E', 'Stage advanced · Sarah Johnson · Fundamentals → Mastery Skills, opened by your verification']);
   // derived from real agent state, not a hardcoded alert
   Object.entries(S.agents).forEach(([name, a]) => {
     if (a.certDone / a.certTotal < 0.5 && openCount(name) >= 2)
@@ -468,26 +543,28 @@ function leaderView() {
             </div>`).join('')}
           <div class="q-empty" style="display:${open.length?'none':'block'}">Queue clear. Verified work updates each agent's Home within seconds.</div>
         </div>
-        ${S.gateReady && !S.stageAdvanced ? `
+        ${S.stageAdvanced ? `
         <div class="card" style="margin-top:14px;padding:16px 18px;border-color:#86EFAC;background:var(--green-100)">
-          <div class="who" style="font-weight:600;color:var(--green-800)">Sarah Johnson · Fundamentals gate ready</div>
-          <div class="what" style="color:var(--green-800);opacity:.8;margin:3px 0 10px">Both required certifications concluded. Confirm to open Mastery Skills.</div>
-          <button class="btn" style="background:var(--green)" onclick="advanceStage()">Confirm and advance stage</button>
+          <div class="who" style="font-weight:600;color:var(--green-800)">Sarah Johnson · advanced to Mastery Skills</div>
+          <div class="what" style="color:var(--green-800);opacity:.8;margin:3px 0 2px">Your verification concluded Listing Basics; both required certifications done, so the gate passed automatically and was logged. Worth a congratulations at the next huddle.</div>
         </div>`:''}
       </div>
       <div class="rail">
         <div class="card" style="padding:15px 17px">
           <h4>Assign a task</h4>
-          <input id="ltask" placeholder="e.g. Bring your Q3 numbers to the 1:1" style="width:100%;border:1px solid var(--z300);border-radius:8px;padding:9px 12px;font-size:13px;font-family:var(--sans);margin-bottom:8px">
+          <input id="ltask" aria-label="Task to assign" placeholder="e.g. Bring your Q3 numbers to the 1:1" style="width:100%;border:1px solid var(--z300);border-radius:8px;padding:9px 12px;font-size:13px;font-family:var(--sans);margin-bottom:8px">
+          <select id="lwho" aria-label="Assign to" style="width:100%;border:1px solid var(--z300);border-radius:8px;padding:9px 10px;font-size:13px;font-family:var(--sans);background:#fff;margin-bottom:8px">
+            <option value="sarah">Sarah Johnson</option>
+            <option value="mike">Mike Torres</option>
+            <option value="group">${'All Fundamentals agents ('+(S.stageAdvanced?2:3)+')'}</option>
+          </select>
           <div style="display:flex;gap:8px;margin-bottom:10px">
-            <select id="lwho" style="flex:1;min-width:0;border:1px solid var(--z300);border-radius:8px;padding:9px 10px;font-size:13px;font-family:var(--sans);background:#fff">
-              <option value="sarah">Sarah Johnson</option>
-              <option value="mike">Mike Torres</option>
-              <option value="group">All Fundamentals agents (3)</option>
-            </select>
-            <select id="ldue" style="border:1px solid var(--z300);border-radius:8px;padding:9px 8px;font-size:13px;font-family:var(--sans);background:#fff">
+            <select id="ldue" aria-label="Due" style="flex:1;min-width:0;border:1px solid var(--z300);border-radius:8px;padding:9px 8px;font-size:13px;font-family:var(--sans);background:#fff">
               <option value="0">due today</option>
               <option value="3">this week</option>
+            </select>
+            <select id="lpri" title="Task priority" aria-label="Task priority" style="flex:1;min-width:0;border:1px solid var(--z300);border-radius:8px;padding:9px 8px;font-size:13px;font-family:var(--sans);background:#fff">
+              <option>Critical</option><option>High</option><option selected>Medium</option><option>Low</option>
             </select>
           </div>
           <button class="btn" style="width:100%" onclick="assignTask()">Assign</button>
@@ -518,8 +595,13 @@ function leaderView() {
 }
 
 function builderView() {
-  const actions = S.cert.items.filter(i => i.ty === 'ACTION' || i.ty === 'TASK').length;
-  const canPublish = actions > 0;
+  const bItems = S.draft || S.cert.items;
+  const actions = bItems.filter(i => i.ty === 'ACTION' || i.ty === 'TASK').length;
+  const verifies = bItems.filter(i => i.ty === 'VERIFY').length;
+  const quizzes = bItems.filter(i => i.ty === 'QUIZ').length;
+  const needsVerify = S.cert.mode.includes('leader approval');
+  const needsQuiz = S.cert.mode.includes('quiz');
+  const canPublish = actions > 0 && (!needsVerify || verifies > 0) && (!needsQuiz || quizzes > 0);
   return `
     <div class="h-row"><h1>Career Path Builder</h1><span class="badge zinc">Office: Scottsdale</span></div>
     <div class="sub">Structure on the left, the selected certification's items in the middle, publish rules on the right.</div>
@@ -534,33 +616,52 @@ function builderView() {
         <div class="path"><span>Database Certification</span><span class="badge zinc">elective</span></div>
         ${S.newPaths.map(p=>`<div class="path"><span>${p}</span><span class="badge zinc">elective · draft</span></div>`).join('')}
         <button style="margin:2px 0 6px 22px;font-size:12px;color:var(--blue-700)" onclick="addPath()">+ add a certification</button>
-        <div class="stg"><div class="nm">3 · Mastery Skills</div><div class="ct">opens at the Fundamentals gate</div></div>
-        <div class="path" style="opacity:.6"><span>Buyer Mastery</span><span class="badge zinc">required</span></div>
-        <div class="path" style="opacity:.6"><span>Listing Mastery</span><span class="badge zinc">required</span></div>
+        <div class="stg"><div class="nm">3 · Mastery Skills</div><div class="ct">${S.stageAdvanced ? 'open · Sarah advanced at the gate' : 'opens at the Fundamentals gate'}</div></div>
+        <div class="path" ${S.stageAdvanced?'':'style="opacity:.6"'}><span>Buyer Mastery</span><span class="badge zinc">required</span></div>
+        <div class="path" ${S.stageAdvanced?'':'style="opacity:.6"'}><span>Listing Mastery</span><span class="badge zinc">required</span></div>
         <div class="stg"><div class="nm">4 · Wealth Building</div><div class="ct">2 paths</div></div>
       </div></div>
       <div class="b-col"><div class="card">
-        <h4>Listing Basics · ${S.cert.items.length} items, ordered</h4>
-        ${S.cert.items.map((i, idx) => `
-          <div class="itemrow ${i.ty==='VERIFY'?'vrow':''}">
-            <span class="ty">${i.ty}</span><span class="nm">${i.nm}</span>
+        <div class="reorder-head">
+          <h4>Listing Basics · ${bItems.length} items, ordered · ${S.published ? 'v'+S.ver+' live' : 'draft v'+S.ver}</h4>
+          <span class="reorder-hint">Drag a row, or preview and move with the arrows</span>
+        </div>
+        <ol class="reorder-list" id="reorder-list" aria-label="Listing Basics items in order">
+        ${bItems.map((i, idx) => `
+          <li class="itemrow ${i.ty==='VERIFY'?'vrow':''}" data-index="${idx}"
+            aria-label="${i.ty}: ${i.nm}${i.ty==='TASK' ? ', '+(i.pri || 'Medium')+' priority' : ''}, position ${idx+1} of ${bItems.length}">
+            <span class="grip" aria-hidden="true" title="Drag to reorder" onpointerdown="startPointerReorder(event,${idx})">⋮⋮</span>
+            <span class="ty">${i.ty}</span><span class="nm">${i.nm}${i.ty==='TASK' ? ' · '+(i.pri || 'Medium')+' priority' : ''}</span>
             <span class="ops">
-              <button title="move up" onclick="moveItem(${idx},-1)">↑</button>
-              <button title="move down" onclick="moveItem(${idx},1)">↓</button>
-              <button title="remove" onclick="removeItem(${idx})">✕</button>
+              <button class="move-up" title="Preview and move up" aria-label="Move ${i.nm} up, position ${idx+1} of ${bItems.length}"
+                onmouseenter="showMovePreview(${idx},-1)" onmouseleave="clearMovePreview()"
+                onfocus="showMovePreview(${idx},-1)" onblur="clearMovePreview()"
+                onclick="moveItem(${idx},-1)" ${idx===0?'disabled':''}>↑</button>
+              <button class="move-down" title="Preview and move down" aria-label="Move ${i.nm} down, position ${idx+1} of ${bItems.length}"
+                onmouseenter="showMovePreview(${idx},1)" onmouseleave="clearMovePreview()"
+                onfocus="showMovePreview(${idx},1)" onblur="clearMovePreview()"
+                onclick="moveItem(${idx},1)" ${idx===bItems.length-1?'disabled':''}>↓</button>
+              <button title="remove" aria-label="Remove ${i.nm}" onclick="removeItem(${idx})">✕</button>
             </span>
-          </div>`).join('')}
+          </li>`).join('')}
+        </ol>
+        <div id="reorder-live" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
         <div class="addrow">
-          <button onclick="addItem('VIDEO')">+ video</button>
+          <button onclick="addItem('VIDEO')">+ video from Learn</button>
           <button onclick="addItem('ACTION')">+ action item</button>
           <button onclick="addItem('TASK')">+ task</button>
           <button onclick="addItem('QUIZ')">+ quiz</button>
           <button onclick="addItem('VERIFY')">+ leader verification</button>
         </div>
-        <div class="pubwarn ${canPublish?'':'show'}">A path cannot publish without at least one action item or task. Watching content is never progress by itself.</div>
+        <div class="pubwarn ${canPublish?'':'show'}">${actions===0
+          ? 'A path cannot publish without at least one action item or task. Watching content is never progress by itself.'
+          : (needsQuiz && quizzes===0)
+          ? 'This path\u2019s mode is quiz + leader approval, so it cannot publish without a quiz. The mode enforces the competency bar; nobody configures around it.'
+          : 'This path\u2019s mode is quiz + leader approval, so it cannot publish without a leader verification checkpoint. The mode enforces the competency bar; nobody configures around it.'}</div>
       </div></div>
       <div class="b-col b-set"><div class="card">
         <h4>Publish</h4>
+        <div class="ln">Path role: <b>required for the Fundamentals gate</b></div>
         <div class="ln">Mode: <b>quiz + leader approval</b> (both required)</div>
         <div class="ln">Version <b>${S.ver} · ${S.published?'published':'draft'}</b>${S.published?' <span class="badge green">live</span>':''}</div>
         <div class="ln">Enrolled agents keep <b>version ${S.lastLive}</b></div>
@@ -582,13 +683,27 @@ function render() {
     S.role==='agent' ? 'Agent · Sarah Johnson · '+(S.stageAdvanced?'Mastery Skills':'Fundamentals') :
     S.role==='leader' ? 'Leadership · Joe · Scottsdale office' : 'Leadership · Career Path Builder';
   ['agent','leader','builder'].forEach(r => {
-    document.getElementById('sw-'+r).classList.toggle('on', S.role===r);
+    const sw = document.getElementById('sw-'+r);
+    const on = S.role===r;
+    sw.classList.toggle('on', on);
+    sw.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
   document.getElementById('nav-home').classList.toggle('on', S.role==='agent');
   document.getElementById('nav-leader').classList.toggle('on', S.role==='leader');
   document.getElementById('nav-builder').classList.toggle('on', S.role==='builder');
 }
 function setRole(r){ S.role = r; render(); }
+function toggleDrawer(){
+  const d = document.getElementById('drawer');
+  const open = d.classList.toggle('open');
+  document.body.classList.toggle('drawer-open', open);
+  d.querySelector('.dhead').setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+function toggleWhy(el){
+  const box = el.parentElement.nextElementSibling;
+  const open = box.classList.toggle('open');
+  el.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
 
 function completeTop(){
   const top = rank()[0];
@@ -630,7 +745,9 @@ function verify(qid){
     i.waiting = false; i.done = true;
     emit('home.feed.reordered', 'Sarah Johnson · verified item unblocks the gate path');
     checkCert();
-    toast('Verified. Sarah’s Home just reordered; the gate item is now on top.');
+    toast(S.stageAdvanced
+      ? 'Verified. That concluded Listing Basics; the Fundamentals gate passed and Sarah advanced to Mastery Skills.'
+      : 'Verified. Sarah’s Home just reordered; the gate item is now on top.');
   } else {
     const a = S.agents[q.who];
     a.certDone++;
@@ -643,73 +760,243 @@ function sendBack(qid){
   const q = S.queue.find(q => q.id === qid);
   const note = prompt('Note back to '+q.who+':', 'Tighten the comps to the same subdivision, then resubmit.');
   if (note === null) return;
+  const safeNote = escapeHTML(note);
   q.done = true;
   if (qid === 'qS') {
     const i = S.cert.items.find(i => i.id==='c8');
     i.waiting = false;
-    i.note = note;   // the agent sees the note on the item itself, not in a void
+    i.note = safeNote;   // the agent sees the note on the item itself, not in a void
   } else {
-    S.agents[q.who].tasks.push({ nm:'Rework: '+q.what.split('· ')[1], m:'sent back by Joe: "'+note.slice(0,90)+'"', done:false });
+    S.agents[q.who].tasks.push({ nm:'Rework: '+q.what.split('· ')[1], m:'sent back by Joe: "'+safeNote.slice(0,90)+'"', done:false });
   }
-  emit('item.returned', `${q.who} · note: "${note.slice(0,60)}" · back in their feed`);
+  emit('item.returned', `${q.who} · note: "${safeNote.slice(0,60)}" · back in their feed`);
   toast('Returned with your note. It goes back into their ranked feed, never into a void.');
   render();
 }
+// competency judgment lives at the leader-verified checkpoints; when the
+// stage's required certifications conclude, the gate passes automatically
+// (a manual advance stays available to leaders as an audited override)
 function checkCert(){
   const allDone = S.cert.items.every(i => i.done);
-  if (allDone && S.cert.quiz.passed && !S.gateReady) {
+  // the gate reads every required certification in the stage, not just the focus path
+  if (allDone && S.cert.quiz.passed && S.buyerBasics.done && !S.gateReady) {
     S.gateReady = true;
     emit('certification.concluded', 'Listing Basics · quiz + leader approval satisfied');
-    emit('gate.check', 'Fundamentals: Buyer Basics ✓ + Listing Basics ✓ → READY');
+    emit('gate.check', 'Fundamentals: Buyer Basics ✓ + Listing Basics ✓ → PASSED');
+    S.stageAdvanced = true;
+    emit('stage.advanced', 'Sarah Johnson · Fundamentals → Mastery Skills · automatic at gate · audited');
+    emit('home.feed.reordered', 'Sarah Johnson · new stage, feed re-ranked');
   }
 }
-function advanceStage(){
-  S.stageAdvanced = true;
-  emit('stage.advanced', 'Sarah Johnson · Fundamentals → Mastery Skills · audited');
-  toast('Stage advanced. Sarah’s map and feed update everywhere at once.');
-  render();
+// builder edits touch a draft copy, never the items enrolled agents are working
+function draftItems(){
+  if (!S.draft) S.draft = S.cert.items.map(i => ({ ...i }));
+  return S.draft;
 }
 function addItem(ty){
   draftify();
-  const names = {VIDEO:'New video · pick from the Learn library', ACTION:'New action item', TASK:'New task', QUIZ:'New quiz', VERIFY:'New leader verification checkpoint'};
-  S.cert.items.push({ id:'n'+Date.now(), ty, nm:names[ty], done:false });
-  emit('builder.item_added', ty+' · Listing Basics v'+S.ver+' draft');
+  const names = {VIDEO:'Video · select a title from the Learn library', ACTION:'New action item', TASK:'New task', QUIZ:'New quiz', VERIFY:'New leader verification checkpoint'};
+  draftItems().push({ id:'n'+Date.now(), ty, nm:names[ty], done:false, ...(ty==='TASK' ? { pri:'Medium' } : {}) });
+  emit('builder.item_added', ty+' · Listing Basics v'+S.ver+' draft'+(ty==='VIDEO'?' · referenced from Learn, never created here':''));
   render();
 }
 function removeItem(idx){
   draftify();
-  const it = S.cert.items[idx];
-  S.cert.items.splice(idx,1);
+  const items = draftItems();
+  const it = items[idx];
+  items.splice(idx,1);
   emit('builder.item_removed', it.ty+' "'+it.nm+'" · draft only, enrolled agents unaffected');
   render();
 }
-function moveItem(idx,dir){
-  const j = idx + dir;
-  if (j < 0 || j >= S.cert.items.length) return;
+let pointerDrag = { from:null, target:null, after:false, pointerId:null, handle:null, row:null, ghost:null, offsetX:0, offsetY:0 };
+function builderRows(){ return Array.from(document.querySelectorAll('#reorder-list > .itemrow:not(.reorder-ghost)')); }
+function clearMovePreview(){
+  document.querySelectorAll('.reorder-ghost').forEach(el => el.remove());
+  document.querySelectorAll('.preview-target').forEach(el => el.classList.remove('preview-target'));
+}
+function showMovePreview(idx,dir){
+  clearMovePreview();
+  const rows = builderRows();
+  const target = rows[idx + dir];
+  const source = rows[idx];
+  const list = document.getElementById('reorder-list');
+  if (!source || !target || !list) return;
+  const ghost = source.cloneNode(true);
+  ghost.className = 'itemrow reorder-ghost' + (source.classList.contains('vrow') ? ' vrow' : '');
+  ghost.setAttribute('aria-hidden', 'true');
+  ghost.inert = true;
+  ghost.removeAttribute('draggable');
+  ghost.querySelector('.grip')?.remove();
+  ghost.querySelector('.ops')?.remove();
+  ghost.style.top = target.offsetTop + 'px';
+  ghost.style.left = target.offsetLeft + 'px';
+  ghost.style.width = target.offsetWidth + 'px';
+  target.classList.add('preview-target');
+  list.appendChild(ghost);
+  requestAnimationFrame(() => ghost.classList.add('show'));
+}
+function announceReorder(item,from,position,method){
+  requestAnimationFrame(() => {
+    const live = document.getElementById('reorder-live');
+    if (live) live.textContent = item.nm + ' moved from position ' + (from + 1) + ' to ' + (position + 1)
+      + ' of ' + draftItems().length + ' by ' + method + '. Draft only; live version unchanged.';
+  });
+}
+function reorderItem(from,to,method){
+  const source = S.draft || S.cert.items;
+  if (from === to || from < 0 || to < 0 || from >= source.length || to >= source.length) return;
   draftify();
-  [S.cert.items[idx], S.cert.items[j]] = [S.cert.items[j], S.cert.items[idx]];
+  const items = draftItems();
+  const [item] = items.splice(from,1);
+  items.splice(to,0,item);
+  emit('builder.item_reordered', item.ty+' "'+item.nm+'" · position '+(to+1)+' · '+method+' · draft only');
+  render();
+  announceReorder(item,from,to,method);
+  toast(item.nm+' moved to position '+(to+1)+'. The live version is unchanged.');
+}
+function moveItem(idx,dir){
+  clearMovePreview();
+  const to = idx + dir;
+  if (to < 0 || to >= (S.draft || S.cert.items).length) return;
+  reorderItem(idx,to,'arrow control');
+  requestAnimationFrame(() => {
+    const moved = document.querySelector(`[data-index="${to}"]`);
+    const preferred = moved?.querySelector(dir < 0 ? '.move-up' : '.move-down');
+    const fallback = moved?.querySelector(dir < 0 ? '.move-down' : '.move-up');
+    (preferred && !preferred.disabled ? preferred : fallback)?.focus();
+  });
+}
+function startPointerReorder(event,idx){
+  if (event.pointerType === 'mouse' && event.button !== 0) return;
+  event.preventDefault();
+  clearMovePreview();
+  const row = builderRows()[idx];
+  if (!row) return;
+  const rect = row.getBoundingClientRect();
+  const ghost = row.cloneNode(true);
+  ghost.className = 'itemrow pointer-drag-ghost' + (row.classList.contains('vrow') ? ' vrow' : '');
+  ghost.setAttribute('aria-hidden', 'true');
+  ghost.inert = true;
+  ghost.removeAttribute('data-index');
+  ghost.removeAttribute('aria-label');
+  ghost.querySelector('.grip')?.removeAttribute('onpointerdown');
+  ghost.querySelector('.ops')?.remove();
+  ghost.style.width = rect.width + 'px';
+  ghost.style.height = rect.height + 'px';
+  ghost.style.left = rect.left + 'px';
+  ghost.style.top = rect.top + 'px';
+  document.body.appendChild(ghost);
+  pointerDrag = {
+    from:idx, target:idx, after:false, pointerId:event.pointerId, handle:event.currentTarget,
+    row, ghost, offsetX:event.clientX-rect.left, offsetY:event.clientY-rect.top
+  };
+  event.currentTarget.setPointerCapture(event.pointerId);
+  event.currentTarget.addEventListener('pointermove', movePointerReorder);
+  event.currentTarget.addEventListener('pointerup', commitPointerReorder, { once:true });
+  event.currentTarget.addEventListener('pointercancel', cancelPointerReorder, { once:true });
+  window.addEventListener('keydown', cancelPointerOnEscape);
+  row.classList.add('dragging');
+}
+function movePointerReorder(event){
+  if (pointerDrag.from === null || event.pointerId !== pointerDrag.pointerId) return;
+  event.preventDefault();
+  pointerDrag.ghost.style.left = (event.clientX-pointerDrag.offsetX) + 'px';
+  pointerDrag.ghost.style.top = (event.clientY-pointerDrag.offsetY) + 'px';
+  const edge = 72;
+  if (event.clientY < edge) window.scrollBy({ top:-12, behavior:'auto' });
+  if (event.clientY > window.innerHeight-edge) window.scrollBy({ top:12, behavior:'auto' });
+  builderRows().forEach(el => el.classList.remove('drop-before','drop-after'));
+  const list = document.getElementById('reorder-list');
+  const listRect = list?.getBoundingClientRect();
+  if (!listRect || event.clientX < listRect.left || event.clientX > listRect.right || event.clientY < listRect.top-18 || event.clientY > listRect.bottom+18) {
+    pointerDrag.target = null;
+    return;
+  }
+  const candidates = builderRows().filter(row => row !== pointerDrag.row);
+  let target = candidates.find(row => event.clientY < row.getBoundingClientRect().top + row.offsetHeight/2);
+  let after = false;
+  if (!target) { target = candidates[candidates.length-1] || pointerDrag.row; after = true; }
+  target.classList.add(after ? 'drop-after' : 'drop-before');
+  pointerDrag.target = Number(target.dataset.index);
+  pointerDrag.after = after;
+}
+function finishPointerReorder(commit,restoreFocus){
+  const state = pointerDrag;
+  if (state.handle) {
+    state.handle.removeEventListener('pointermove', movePointerReorder);
+    state.handle.removeEventListener('pointerup', commitPointerReorder);
+    state.handle.removeEventListener('pointercancel', cancelPointerReorder);
+    try { if (state.handle.hasPointerCapture(state.pointerId)) state.handle.releasePointerCapture(state.pointerId); } catch (_) {}
+  }
+  window.removeEventListener('keydown', cancelPointerOnEscape);
+  state.ghost?.remove();
+  builderRows().forEach(el => el.classList.remove('dragging','drop-before','drop-after'));
+  pointerDrag = { from:null, target:null, after:false, pointerId:null, handle:null, row:null, ghost:null, offsetX:0, offsetY:0 };
+  if (!commit || state.target === null) {
+    const live = document.getElementById('reorder-live');
+    if (live) live.textContent = 'Reorder cancelled. Item order is unchanged.';
+    if (restoreFocus) {
+      const row = document.querySelector(`[data-index="${state.from}"]`);
+      row?.querySelector('.move-down:not(:disabled),.move-up:not(:disabled)')?.focus();
+    }
+    return;
+  }
+  let to = state.target + (state.after ? 1 : 0);
+  if (to > state.from) to--;
+  reorderItem(state.from,to,'pointer drag and drop');
+}
+function commitPointerReorder(event){
+  event.preventDefault();
+  finishPointerReorder(true);
+}
+function cancelPointerReorder(){ finishPointerReorder(false); }
+function cancelPointerOnEscape(event){
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    finishPointerReorder(false,true);
+  }
+}
+function startMastery(name){
+  S.masteryStarted = name;
+  const firstItem = name === 'Buyer Mastery'
+    ? 'Buyer Mastery: shadow two buyer consultations'
+    : 'Listing Mastery: run a full CMA review with your leader';
+  S.tasks.push({ id:'bm1', src:'career', focus:true, nm:firstItem, m:name+' Certification · first item · your focus', due:3, done:false });
+  emit('learning_path.enrolled', name+' Certification · chosen by Sarah at Mastery entry · set as focus');
+  emit('home.feed.reordered', 'Sarah Johnson · focus path items rank at tier 4');
+  toast(name+' started as your focus. Its first item just joined your ranked feed at career-path rank.');
   render();
 }
-function startMastery(){
-  S.masteryStarted = true;
-  S.tasks.push({ id:'bm1', src:'personal', nm:'Buyer Mastery: shadow two buyer consultations', m:'Buyer Mastery Certification · first item', due:3, done:false });
-  emit('learning_path.enrolled', 'Buyer Mastery Certification · chosen by Sarah at stage entry');
-  emit('home.feed.reordered', 'Sarah Johnson · new path items join the ranking');
-  toast('Buyer Mastery started. Its first item just joined your ranked feed.');
+function startSecondMastery(){
+  const name = S.masteryStarted === 'Buyer Mastery' ? 'Listing Mastery' : 'Buyer Mastery';
+  S.secondMastery = name;
+  const firstItem = name === 'Buyer Mastery'
+    ? 'Buyer Mastery: shadow two buyer consultations'
+    : 'Listing Mastery: run a full CMA review with your leader';
+  S.tasks.push({ id:'bm2', src:'career', focus:false, nm:firstItem, m:name+' Certification · first item · active alongside your focus', due:3, done:false });
+  emit('learning_path.enrolled', name+' Certification · second active path · '+S.masteryStarted+' stays focus');
+  emit('home.feed.reordered', 'Sarah Johnson · non-focus career items rank at tier 5');
+  toast(name+' started alongside '+S.masteryStarted+'. Both are active; your focus is unchanged, progress on both persists.');
   render();
 }
 function publish(){
+  const snapshot = (S.draft || S.cert.items).map(item => Object.freeze({ ...item }));
+  S.publishedVersions[S.ver] = Object.freeze(snapshot);
   S.published = true;
-  S.lastLive = S.ver;
-  emit('template.pushed', 'Listing Basics v'+S.ver+' · new enrollments only · preview confirmed');
-  toast('Version '+S.ver+' published for new enrollments. Enrolled agents keep their version until you push, with a preview first.');
+  // lastLive is what enrolled agents are on; publishing serves new enrollments only,
+  // so it does not move until a deliberate push
+  emit('template.published', 'Listing Basics v'+S.ver+' · new enrollments only · enrolled agents keep v'+S.lastLive);
+  toast('Version '+S.ver+' published for new enrollments. Enrolled agents keep version '+S.lastLive+' until you push, with a preview first.');
   render();
 }
 // published versions are immutable: any edit reopens a numbered draft
 function draftify(){
   if (S.published) {
+    const publishedVersion = S.ver;
+    const publishedSnapshot = S.publishedVersions[publishedVersion];
     S.published = false;
     S.ver++;
+    S.draft = (publishedSnapshot || S.draft || S.cert.items).map(item => ({ ...item }));
     emit('builder.new_draft', 'edits reopen a draft · v'+S.ver+' · v'+S.lastLive+' stays live for enrolled agents');
     toast('Version '+S.lastLive+' stays live and untouched. Your edits opened draft v'+S.ver+'.');
   }
@@ -717,38 +1004,45 @@ function draftify(){
 function addOwnTask(){
   const inp = document.getElementById('newtask');
   const due = parseInt(document.getElementById('newtaskdue').value, 10);
-  const nm = (inp.value || '').trim();
-  if (!nm) { toast('Give the task a name first.'); return; }
-  S.tasks.push({ id:'p'+Date.now(), src:'personal', nm, m:'personal task · '+(due===0?'due today':'due Friday'), due, done:false });
-  emit('task.created', '"'+nm+'" · self-assigned · Sarah Johnson');
+  const pri = document.getElementById('newtaskpri').value;
+  const rawName = (inp.value || '').trim();
+  if (!rawName) { toast('Give the task a name first.'); return; }
+  const nm = escapeHTML(rawName);
+  S.tasks.push({ id:'p'+Date.now(), src:'personal', pri, nm, m:'personal task · '+(due===0?'due today':'due Friday'), due, done:false });
+  emit('task.created', '"'+nm+'" · self-assigned · '+pri.toLowerCase()+' priority · Sarah Johnson');
   emit('home.feed.reordered', 'Sarah Johnson · rank() re-ran');
   toast('Added. It ranks with everything else, never in a separate silo.');
   render();
 }
 function enrollDb(){
   S.dbEnrolled = true;
-  S.tasks.push({ id:'db1', src:'personal', nm:'Database Certification: connect your CRM export', m:'Database Certification · first item · elective', due:3, done:false });
+  S.tasks.push({ id:'db1', src:'career', focus:false, nm:'Database Certification: connect your CRM export', m:'Database Certification · first item · elective', due:3, done:false });
   emit('learning_path.enrolled', 'Database Certification · chosen by Sarah · Listing Basics stays her focus');
-  emit('home.feed.reordered', 'Sarah Johnson · elective items rank at tier 5');
-  toast('Enrolled. Your focus stays on Listing Basics; Database items rank below it.');
+  emit('home.feed.reordered', 'Sarah Johnson · non-focus career items rank at tier 5');
+  toast('Enrolled. Your focus stays on Listing Basics; Database items rank below it, progress kept.');
   render();
 }
 function assignTask(){
   const inp = document.getElementById('ltask');
   const who = document.getElementById('lwho').value;
   const due = parseInt(document.getElementById('ldue').value, 10);
-  const nm = (inp.value || '').trim();
-  if (!nm) { toast('Give the task a name first.'); return; }
+  const pri = document.getElementById('lpri').value;
+  const rawName = (inp.value || '').trim();
+  if (!rawName) { toast('Give the task a name first.'); return; }
+  const nm = escapeHTML(rawName);
   const meta = 'assigned by Joe · ' + (due === 0 ? 'due today' : 'due Friday');
-  const sarahTask = () => S.tasks.push({ id:'l'+Date.now(), src:'leader', nm, m:meta, due, done:false });
-  const agentTask = name => S.agents[name].tasks.push({ nm, m:meta, done:false });
+  const sarahTask = () => S.tasks.push({ id:'l'+Date.now(), src:'leader', pri, nm, m:meta, due, done:false });
+  const agentTask = name => S.agents[name].tasks.push({ nm, m:meta+' · '+pri.toLowerCase()+' priority', done:false });
   if (who === 'group') {
-    // real fan-out: one task instance per agent, all in state
-    sarahTask();
+    // real fan-out: one task instance per agent, all in state; group membership
+    // is dynamic, so an advanced agent is no longer in the Fundamentals cohort
+    const cohort = S.stageAdvanced ? ['Mike Torres','Dana Wells'] : ['Sarah Johnson','Mike Torres','Dana Wells'];
+    if (!S.stageAdvanced) sarahTask();
     agentTask('Mike Torres'); agentTask('Dana Wells');
-    ['Sarah Johnson','Mike Torres','Dana Wells'].forEach(a =>
-      emit('task.assigned', '"'+nm+'" · to '+a+' · one instance each'));
-    toast('Fanned out: 3 real instances. It is in Sarah’s feed now; tap "inspect" under the counts to see the same task in Mike’s and Dana’s lists.');
+    cohort.forEach(a => emit('task.assigned', '"'+nm+'" · to '+a+' · one instance each'));
+    toast(S.stageAdvanced
+      ? 'Fanned out: 2 real instances. Sarah advanced to Mastery Skills, so she is no longer in the Fundamentals group; tap "inspect" to see the task in Mike’s and Dana’s lists.'
+      : 'Fanned out: 3 real instances. It is in Sarah’s feed now; tap "inspect" under the counts to see the same task in Mike’s and Dana’s lists.');
   } else if (who === 'sarah') {
     sarahTask();
     emit('task.assigned', '"'+nm+'" · to Sarah Johnson · by Joe');
