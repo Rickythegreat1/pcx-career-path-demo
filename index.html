@@ -75,7 +75,7 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
 .home-grid{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start}
 .hero{border:1.5px solid var(--blue);background:var(--blue-50);border-radius:12px;padding:18px 20px;margin-bottom:18px;position:relative}
 .hero .mini{color:var(--blue-700)}
-.hero h3{font-size:17px;margin:6px 0 3px;letter-spacing:-.005em}
+.hero h2{font-size:17px;margin:6px 0 3px;letter-spacing:-.005em}
 .hero .meta{font-size:13px;color:var(--z600)}
 .hero .act{margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .why{font-size:12px;color:var(--blue-700);text-decoration:underline dotted;cursor:pointer}
@@ -86,15 +86,15 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
 .feed .item:last-child{border-bottom:none}
 .feed .chk{width:16px;height:16px;border:1.5px solid var(--z300);border-radius:4px;flex:none;cursor:pointer;display:grid;place-items:center;color:#fff;font-size:11px}
 .feed .item.done .chk{background:var(--blue-bright);border-color:var(--blue-bright)}
-.feed .item.done .t{text-decoration:line-through;color:var(--z400)}
+.feed .item.done .t{text-decoration:line-through;color:var(--z500)}
 .feed .grow{min-width:0;flex:1}
 .feed .t{font-size:13px;font-weight:500}
 .feed .m{font-size:12px;color:var(--z500)}
 .feed .item.waiting{background:var(--z50)}
-.feed .item.waiting .chk{border-style:dashed;cursor:default;color:var(--z400)}
+.feed .item.waiting .chk{border-style:dashed;cursor:default;color:var(--z500)}
 .tierchip{font-family:var(--mono);font-size:9.5px;color:var(--z500);flex:none}
 .rail .card{padding:15px 17px;margin-bottom:14px}
-.rail h4{font-size:13.5px;font-weight:600;margin-bottom:8px}
+.rail h2{font-size:13.5px;font-weight:600;margin-bottom:8px}
 .bar{height:4px;background:var(--z100);border-radius:99px;overflow:hidden;margin:8px 0 6px}
 .bar i{display:block;height:100%;background:var(--blue-bright);border-radius:99px;transition:width .5s}
 .rail .ln{font-size:12.5px;color:var(--z600);padding:3px 0}
@@ -108,13 +108,13 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
 .gatecard{border:1.5px solid var(--green);background:var(--green-100);border-radius:12px;padding:16px 18px;margin-bottom:18px;display:none}
 .gatecard.show{display:block;animation:pop .4s}
 @keyframes pop{0%{transform:scale(.97);opacity:0}100%{transform:scale(1);opacity:1}}
-.gatecard h3{font-size:16px;color:var(--green-800)}
+.gatecard h2{font-size:16px;color:var(--green-800)}
 .gatecard p{font-size:13px;color:var(--green-800);opacity:.85;margin-top:3px}
 
 /* ---------- builder ---------- */
 .b-grid{display:grid;grid-template-columns:250px 1fr 250px;gap:16px;align-items:start}
 .b-col .card{padding:14px}
-.b-col h4{font-size:13px;font-weight:700;margin-bottom:10px}
+.b-col h2{font-size:13px;font-weight:700;margin-bottom:10px}
 .stg{padding:9px 10px;border-radius:8px;margin-bottom:4px}
 .stg .nm{font-size:13.5px;font-weight:600}
 .stg .ct{font-size:11.5px;color:var(--z500)}
@@ -122,7 +122,7 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
 .path.sel{background:var(--blue-50);color:var(--blue-700);font-weight:600}
 .path .badge{font-size:9.5px;padding:1px 7px}
 .reorder-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
-.reorder-head h4{margin-bottom:0}
+.reorder-head h2{margin-bottom:0}
 .reorder-hint{font-size:10.5px;color:var(--z500);text-align:right;line-height:1.35}
 .reorder-list{position:relative;list-style:none;margin:0;padding:0}
 .itemrow{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--z200);border-radius:8px;margin-bottom:7px;background:var(--z50);position:relative;transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .18s,border-color .18s,opacity .18s,background .18s}
@@ -166,7 +166,7 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
 .q-item .ctx{font-size:12.5px;color:var(--z500);background:var(--z50);border:1px solid var(--z100);border-radius:7px;padding:8px 12px;margin:8px 0 12px}
 .q-item .row{display:flex;gap:9px;flex-wrap:wrap}
 .q-item .row .btn{padding:8px 14px;font-size:13px}
-.q-empty{padding:26px;text-align:center;color:var(--z400);font-size:13.5px;display:none}
+.q-empty{padding:26px;text-align:center;color:var(--z600);font-size:13.5px;display:none}
 .flag{display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--z100);font-size:13px}
 .flag:last-child{border-bottom:none}
 .flag .fdot{width:9px;height:9px;border-radius:99px;flex:none}
@@ -176,7 +176,8 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
 .drawer .dhead{display:flex;align-items:center;gap:10px;padding:8px 18px;cursor:pointer}
 .drawer .dhead .pulse{width:8px;height:8px;border-radius:99px;background:#4ADE80}
 .drawer .dhead b{color:#fff;font-weight:600;letter-spacing:.06em;font-size:11px}
-.drawer .dhead span{color:#67718A;font-size:10.5px}
+.drawer .dhead span{color:#AAB4C6;font-size:11px}
+.supporting-copy{color:var(--z600)!important}
 .drawer .dlog{display:none;max-height:150px;overflow:auto;padding:2px 18px 12px;border-top:1px solid #2A3444}
 .drawer.open .dlog{display:block}
 .drawer .ev{padding:3px 0;color:#8B95A7}
@@ -258,7 +259,7 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
   </div>
   <div class="dlog" id="dlog"></div>
 </div>
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <script>
 /* ============================================================
@@ -416,7 +417,7 @@ function agentView() {
   const heroHtml = hero ? `
     <div class="hero">
       <div class="mini">&ldquo;What should I do today?&rdquo; &middot; your answer</div>
-      <h3>${hero.ref.nm}</h3>
+      <h2>${hero.ref.nm}</h2>
       <div class="meta">${hero.kind==='cert'
         ? `${S.cert.name} · item ${S.cert.items.indexOf(hero.ref)+1} of ${S.cert.items.length}`+(hero.ref.note?` · sent back by Joe: &ldquo;${hero.ref.note}&rdquo;`:'')
         : hero.ref.m + priTag(hero.ref)}</div>
@@ -445,7 +446,7 @@ function agentView() {
     <div class="h-row"><h1>Good morning, Sarah</h1><span class="badge blue">${S.stageAdvanced?'Mastery Skills':'Fundamentals'}</span></div>
     <div class="sub">${S.today} · Scottsdale office · day ${S.t3690.day} of Sarah's plan (the demo starts mid-journey) · ${feed.length} open item${feed.length===1?'':'s'}</div>
     <div class="gatecard ${S.stageAdvanced ? 'show':''}">
-      <h3>Welcome to Mastery Skills</h3>
+      <h2>Welcome to Mastery Skills</h2>
       <p>Buyer Basics and Listing Basics both concluded, so the Fundamentals gate passed the moment Joe verified your listing presentation. Joe was notified. ${S.masteryStarted ? 'Your new focus: '+S.masteryStarted+'.' : 'New paths are open; choose what you lead with:'}</p>
       ${!S.masteryStarted ? `<div class="mastery-choices" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
         <button class="btn" style="flex:1;min-width:150px" onclick="startMastery('Buyer Mastery')">Lead with Buyer Mastery</button>
@@ -472,7 +473,7 @@ function agentView() {
               <span class="tierchip">waiting</span>
             </div>`:''}
           ${feed.length===0 && !waitingItem ? `<div class="item"><div class="grow"><div class="t" style="color:var(--z500)">All caught up.</div><div class="m">${S.stageAdvanced && !S.masteryStarted ? 'Next suggestion: choose what you lead with in Mastery Skills, above.' : S.stageAdvanced ? 'Next suggestion: keep working '+S.masteryStarted+'; its next item lands here.' : 'Next suggestion: start Database Certification, the first open elective in your stage.'}</div></div></div>`:''}
-          ${feed.length===1 && !waitingItem ? `<div class="item"><div class="grow"><div class="m" style="color:var(--z400)">Nothing else in line after the card above.</div></div></div>`:''}
+          ${feed.length===1 && !waitingItem ? `<div class="item"><div class="grow"><div class="m supporting-copy">Nothing else in line after the card above.</div></div></div>`:''}
         </div>
         <div class="card" style="margin-top:14px;padding:13px 16px">
           <div class="mini" style="margin-bottom:8px">Add your own task</div>
@@ -490,8 +491,8 @@ function agentView() {
       </div>
       <div class="rail">
         <div class="card">
-          <h4>Listing Basics · ${S.gateReady||S.stageAdvanced ? 'concluded ✓' : 'focus'}</h4>
-          ${!S.stageAdvanced ? '<div class="ln" style="font-size:11.5px;color:var(--z400)">Sarah&rsquo;s pick at Fundamentals entry; Buyer Basics ran alongside it</div>' : ''}
+          <h2>Listing Basics · ${S.gateReady||S.stageAdvanced ? 'concluded ✓' : 'focus'}</h2>
+          ${!S.stageAdvanced ? '<div class="ln supporting-copy" style="font-size:11.5px">Sarah&rsquo;s pick at Fundamentals entry; Buyer Basics ran alongside it</div>' : ''}
           <div class="bar"><i style="width:${Math.round(certDone/S.cert.items.length*100)}%"></i></div>
           <div class="ln">${certDone} of ${S.cert.items.length} items · <a href="#" style="color:var(--blue-700)" onclick="S.quizOpen=!S.quizOpen;render();return false">quiz passed ${S.cert.quiz.score}% ${S.quizOpen?'▾':'▸'}</a></div>
           ${S.quizOpen?`<div class="ln" style="font-family:var(--mono);font-size:11.5px;background:var(--z50);border-radius:7px;padding:8px 10px;margin:4px 0">
@@ -500,12 +501,12 @@ function agentView() {
           <div class="ln">mode: ${S.cert.mode}</div>
         </div>
         <div class="card">
-          <h4>Career stage</h4>
+          <h2>Career stage</h2>
           <div class="stage-ln done"><span class="sdot"></span>Getting Set Up</div>
           <div class="stage-ln ${S.stageAdvanced?'done':'cur'}"><span class="sdot"></span>Fundamentals</div>
           <div class="stage-ln ${S.stageAdvanced?'cur':''}"><span class="sdot"></span>Mastery Skills</div>
           <div class="stage-ln"><span class="sdot"></span>Wealth Building</div>
-          <div class="ln" style="margin-top:6px">Buyer Basics ✓ <span title="${S.buyerBasics.itemsDone}/${S.buyerBasics.itemsTotal} items · quiz ${S.buyerBasics.quiz} · verified by ${S.buyerBasics.verifiedBy}" style="color:var(--z400);font-size:11px">(${S.buyerBasics.itemsDone}/${S.buyerBasics.itemsTotal} · verified)</span> · Listing Basics ${S.gateReady||S.stageAdvanced?'✓':certDone+'/'+S.cert.items.length}${S.dbEnrolled?' · Database enrolled':''}</div>
+          <div class="ln" style="margin-top:6px">Buyer Basics ✓ <span class="supporting-copy" title="${S.buyerBasics.itemsDone}/${S.buyerBasics.itemsTotal} items · quiz ${S.buyerBasics.quiz} · verified by ${S.buyerBasics.verifiedBy}" style="font-size:11px">(${S.buyerBasics.itemsDone}/${S.buyerBasics.itemsTotal} · verified)</span> · Listing Basics ${S.gateReady||S.stageAdvanced?'✓':certDone+'/'+S.cert.items.length}${S.dbEnrolled?' · Database enrolled':''}</div>
           ${!S.dbEnrolled && !S.stageAdvanced ? `<button class="btn ghost" style="margin-top:10px;width:100%;font-size:12.5px" onclick="enrollDb()">Start an elective: Database Certification</button>`:''}
           ${S.stageAdvanced ? `<div class="ln" style="margin-top:6px">Now open: Buyer Mastery · Listing Mastery</div>
           ${!S.masteryStarted ? `
@@ -513,7 +514,7 @@ function agentView() {
           ${!S.secondMastery ? `<button class="btn ghost" style="margin-top:6px;width:100%;font-size:12.5px" onclick="startSecondMastery()">Also start ${S.masteryStarted==='Buyer Mastery'?'Listing Mastery':'Buyer Mastery'} alongside it</button>` : `<div class="ln">${S.secondMastery} · active alongside your focus</div>`}`}`:''}
         </div>
         <div class="card">
-          <h4>30-60-90 · day ${S.t3690.day}</h4>
+          <h2>30-60-90 · day ${S.t3690.day}</h2>
           <div class="bar"><i style="width:${S.t3690.pct}%"></i></div>
           <div class="ln">${S.t3690.pct}% complete</div>
           <div class="ln">${(w => w ? w+' item'+(w===1?'':'s')+' waiting on verification' : 'nothing waiting on verification')(S.cert.items.filter(i=>i.waiting).length)}</div>
@@ -563,7 +564,7 @@ function leaderView() {
       </div>
       <div class="rail">
         <div class="card" style="padding:15px 17px">
-          <h4>Assign a task</h4>
+          <h2>Assign a task</h2>
           <input id="ltask" aria-label="Task to assign" placeholder="e.g. Bring your Q3 numbers to the 1:1" style="width:100%;border:1px solid var(--z300);border-radius:8px;padding:9px 12px;font-size:13px;font-family:var(--sans);margin-bottom:8px">
           <select id="lwho" aria-label="Assign to" style="width:100%;border:1px solid var(--z300);border-radius:8px;padding:9px 10px;font-size:13px;font-family:var(--sans);background:#fff;margin-bottom:8px">
             <option value="sarah">Sarah Johnson</option>
@@ -580,7 +581,7 @@ function leaderView() {
             </select>
           </div>
           <button class="btn" style="width:100%" onclick="assignTask()">Assign</button>
-          <div class="ln" style="margin-top:8px;font-size:11.5px;color:var(--z400)">One agent or a group: write it once, the system creates one instance per person.</div>
+          <div class="ln supporting-copy" style="margin-top:8px;font-size:11.5px">One agent or a group: write it once, the system creates one instance per person.</div>
           <div class="ln" style="margin-top:6px;font-family:var(--mono);font-size:11px">
             Open tasks · Sarah ${S.tasks.filter(t=>!t.done).length} · Mike ${openCount('Mike Torres')} · Dana ${openCount('Dana Wells')}
             <a href="#" style="color:var(--blue-700);margin-left:4px" onclick="S.rosterOpen=!S.rosterOpen;render();return false">${S.rosterOpen?'hide ▾':'inspect ▸'}</a>
@@ -595,11 +596,11 @@ function leaderView() {
           </div>`:''}
         </div>
         <div class="card" style="padding:15px 17px;margin-top:14px">
-          <h4>Needs attention</h4>
+          <h2>Needs attention</h2>
           ${flags.map(f => `<div class="flag"><span class="fdot" style="background:${f[0]}"></span>${f[1]}</div>`).join('')}
         </div>
         <div class="card" style="padding:15px 17px;margin-top:14px">
-          <h4>Why two taps matter</h4>
+          <h2>Why two taps matter</h2>
           <div class="ln" style="line-height:1.55">Each decision here is one event. The agent's Home reorders, the certification updates, the gate check runs, and the audit log records it. Effortless verification is what keeps competency checkpoints real.</div>
         </div>
       </div>
@@ -619,7 +620,7 @@ function builderView() {
     <div class="sub">Structure on the left, the selected certification's items in the middle, publish rules on the right.</div>
     <div class="b-grid">
       <div class="b-col"><div class="card">
-        <h4>Stages</h4>
+        <h2>Stages</h2>
         <div class="stg"><div class="nm">1 · Getting Set Up</div><div class="ct">1 required path</div></div>
         <div class="path"><span>Office Onboarding</span><span class="badge green">required</span></div>
         <div class="stg" style="background:var(--z50)"><div class="nm">2 · Fundamentals</div><div class="ct">2 required + electives</div></div>
@@ -635,7 +636,7 @@ function builderView() {
       </div></div>
       <div class="b-col"><div class="card">
         <div class="reorder-head">
-          <h4>Listing Basics · ${bItems.length} items, ordered · ${S.published ? 'v'+S.ver+' live' : 'draft v'+S.ver}</h4>
+          <h2>Listing Basics · ${bItems.length} items, ordered · ${S.published ? 'v'+S.ver+' live' : 'draft v'+S.ver}</h2>
           <span class="reorder-hint">Drag a row, or preview and move with the arrows</span>
         </div>
         <ol class="reorder-list" id="reorder-list" aria-label="Listing Basics items in order">
@@ -672,7 +673,7 @@ function builderView() {
           : 'This path\u2019s mode is quiz + leader approval, so it cannot publish without a leader verification checkpoint. The mode enforces the competency bar; nobody configures around it.'}</div>
       </div></div>
       <div class="b-col b-set"><div class="card">
-        <h4>Publish</h4>
+        <h2>Publish</h2>
         <div class="ln">Path role: <b>required for the Fundamentals gate</b></div>
         <div class="ln">Mode: <b>quiz + leader approval</b> (both required)</div>
         <div class="ln">Version <b>${S.ver} · ${S.published?'published':'draft'}</b>${S.published?' <span class="badge green">live</span>':''}</div>
@@ -690,6 +691,13 @@ function builderView() {
    ============================================================ */
 function render() {
   const v = document.getElementById('view');
+  const active = document.activeElement;
+  const restore = active && v.contains(active) ? {
+    id: active.id || '',
+    label: active.getAttribute('aria-label') || '',
+    text: active.textContent.trim(),
+    tag: active.tagName
+  } : null;
   v.innerHTML = S.role==='agent' ? agentView() : S.role==='leader' ? leaderView() : builderView();
   document.getElementById('crumb').textContent =
     S.role==='agent' ? 'Agent · Sarah Johnson · '+(S.stageAdvanced?'Mastery Skills':'Fundamentals') :
@@ -703,6 +711,17 @@ function render() {
   document.getElementById('nav-home').classList.toggle('on', S.role==='agent');
   document.getElementById('nav-leader').classList.toggle('on', S.role==='leader');
   document.getElementById('nav-builder').classList.toggle('on', S.role==='builder');
+  if (restore) requestAnimationFrame(() => {
+    let target = restore.id ? document.getElementById(restore.id) : null;
+    const candidates = Array.from(v.querySelectorAll(restore.tag));
+    if (!target && restore.label) target = candidates.find(el => el.getAttribute('aria-label') === restore.label);
+    if (!target && restore.text) target = candidates.find(el => el.textContent.trim() === restore.text);
+    if (!target) {
+      target = v.querySelector('h1');
+      if (target) target.setAttribute('tabindex', '-1');
+    }
+    if (target) target.focus({preventScroll:true});
+  });
 }
 function setRole(r){ S.role = r; render(); }
 function toggleDrawer(){
