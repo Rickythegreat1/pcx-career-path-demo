@@ -197,14 +197,24 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
   .switch button{padding:10px 12px;min-height:44px}
   .itemrow .ops button,.grip{min-width:40px;min-height:40px}
   .reorder-hint{max-width:150px}
+  button,input,select,.drawer .dhead{min-height:44px}
+  main a,.why{display:inline-flex;align-items:center;min-height:44px}
 }
 @media(max-width:560px){
   .topbar{padding:10px 14px;flex-wrap:wrap}
   .topbar .crumb{display:none}
   .topbar .mini{display:none}
+  .topbar .mock-badge{display:none}
   .topbar .spacer{display:none}
   .switch{flex:1 0 100%;min-width:0}
   .switch button{flex:1;padding:9px 4px;font-size:11px;min-height:44px}
+  .itemrow{display:grid;grid-template-columns:44px 52px minmax(0,1fr);grid-template-areas:"grip type name" "ops ops ops";gap:6px 8px}
+  .itemrow .grip{grid-area:grip}
+  .itemrow .ty{grid-area:type;width:auto}
+  .itemrow .nm{grid-area:name}
+  .itemrow .ops{grid-area:ops;justify-content:flex-end}
+  .mastery-choices{flex-direction:column}
+  .mastery-choices .btn{width:100%;min-width:0!important}
 }
 @media(prefers-reduced-motion:reduce){.itemrow,.itemrow .ops button,.toast,.reorder-ghost{transition:none!important}.gatecard.show{animation:none}.pointer-drag-ghost{transform:none}}
 </style>
@@ -225,7 +235,7 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
   <main>
     <div class="topbar">
       <span class="crumb" id="crumb">Agent · Sarah Johnson · Fundamentals</span>
-      <span class="badge zinc" style="flex:none" title="Single-file interactive mock. State lives in this page and resets on refresh.">mock demo · no backend</span>
+      <span class="badge zinc mock-badge" style="flex:none" title="Single-file interactive mock. State lives in this page and resets on refresh.">mock demo · no backend</span>
       <div class="spacer"></div>
       <span class="mini" style="flex:none">View as</span>
       <div class="switch" role="group" aria-label="View as">
@@ -433,7 +443,7 @@ function agentView() {
     <div class="gatecard ${S.stageAdvanced ? 'show':''}">
       <h3>Welcome to Mastery Skills</h3>
       <p>Buyer Basics and Listing Basics both concluded, so the Fundamentals gate passed the moment Joe verified your listing presentation. Joe was notified. ${S.masteryStarted ? 'Your new focus: '+S.masteryStarted+'.' : 'New paths are open; choose what you lead with:'}</p>
-      ${!S.masteryStarted ? `<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+      ${!S.masteryStarted ? `<div class="mastery-choices" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
         <button class="btn" style="flex:1;min-width:150px" onclick="startMastery('Buyer Mastery')">Lead with Buyer Mastery</button>
         <button class="btn" style="flex:1;min-width:150px" onclick="startMastery('Listing Mastery')">Lead with Listing Mastery</button>
       </div>` : ''}
@@ -495,9 +505,7 @@ function agentView() {
           ${!S.dbEnrolled && !S.stageAdvanced ? `<button class="btn ghost" style="margin-top:10px;width:100%;font-size:12.5px" onclick="enrollDb()">Start an elective: Database Certification</button>`:''}
           ${S.stageAdvanced ? `<div class="ln" style="margin-top:6px">Now open: Buyer Mastery · Listing Mastery</div>
           ${!S.masteryStarted ? `
-          <div class="ln" style="margin-top:4px;color:var(--z500)">Your choice sets your new focus:</div>
-          <button class="btn ghost" style="margin-top:6px;width:100%;font-size:12.5px" onclick="startMastery('Buyer Mastery')">Lead with Buyer Mastery</button>
-          <button class="btn ghost" style="margin-top:6px;width:100%;font-size:12.5px" onclick="startMastery('Listing Mastery')">Lead with Listing Mastery</button>` : `<div class="ln">${S.masteryStarted} · your focus</div>
+          <div class="ln" style="margin-top:4px;color:var(--z500)">Choose your focus in the Welcome to Mastery Skills card above.</div>` : `<div class="ln">${S.masteryStarted} · your focus</div>
           ${!S.secondMastery ? `<button class="btn ghost" style="margin-top:6px;width:100%;font-size:12.5px" onclick="startSecondMastery()">Also start ${S.masteryStarted==='Buyer Mastery'?'Listing Mastery':'Buyer Mastery'} alongside it</button>` : `<div class="ln">${S.secondMastery} · active alongside your focus</div>`}`}`:''}
         </div>
         <div class="card">
