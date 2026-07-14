@@ -130,10 +130,7 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
 .itemrow{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--z200);border-radius:8px;margin-bottom:7px;background:var(--z50);position:relative;transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .18s,border-color .18s,opacity .18s,background .18s}
 .itemrow:hover:not(.dragging){transform:translateY(-1px);box-shadow:0 5px 14px #1018280d;border-color:var(--z300)}
 .itemrow.vrow{background:var(--green-100);border-color:#86EFAC}
-.itemrow.dragging{opacity:.2;transform:scale(.985);box-shadow:none}
-.itemrow.drop-before::before,.itemrow.drop-after::after{content:"Drop here";position:absolute;left:8px;right:8px;height:2px;background:var(--blue);color:var(--blue-700);font:600 9px var(--mono);letter-spacing:.04em;line-height:0;padding-left:10px;z-index:4;box-shadow:0 0 0 4px var(--blue-50)}
-.itemrow.drop-before::before{top:-5px}
-.itemrow.drop-after::after{bottom:-5px}
+.itemrow.dragging{opacity:.16;transform:none;box-shadow:none;border-style:dashed;background:var(--blue-50)}
 .itemrow.preview-target{border-color:var(--blue-200);background:#fff;box-shadow:0 0 0 3px var(--blue-50)}
 .itemrow.reorder-ghost{position:absolute;z-index:8;pointer-events:none;margin:0;opacity:0;transform:translateY(8px) scale(.99);border:1.5px solid var(--blue);background:color-mix(in srgb,#fff 88%,var(--blue-50));box-shadow:0 14px 34px #155dfc26,0 2px 8px #10182814}
 .itemrow.reorder-ghost.show{opacity:.82;transform:translateY(0) scale(1)}
@@ -647,13 +644,13 @@ function builderView() {
       <div class="b-col"><div class="card">
         <div class="reorder-head">
           <h2>Listing Basics · ${bItems.length} items, ordered · ${S.published ? 'v'+S.ver+' live' : 'draft v'+S.ver}</h2>
-          <span class="reorder-hint">Drag a row, or preview and move with the arrows</span>
+          <span class="reorder-hint">Drag a row to reorder live, or preview and move with the arrows</span>
         </div>
         <ol class="reorder-list" id="reorder-list" aria-label="Listing Basics items in order">
         ${bItems.map((i, idx) => `
           <li class="itemrow ${i.ty==='VERIFY'?'vrow':''}" data-index="${idx}"
             aria-label="${i.ty}: ${i.nm}${i.ty==='TASK' ? ', '+(i.pri || 'Medium')+' priority' : ''}, position ${idx+1} of ${bItems.length}">
-            <span class="grip" aria-hidden="true" title="Drag to reorder" onpointerdown="startPointerReorder(event,${idx})">⋮⋮</span>
+            <span class="grip" aria-hidden="true" onpointerdown="startPointerReorder(event,${idx})">⋮⋮</span>
             <span class="ty">${i.ty}</span><span class="nm">${i.nm}${i.ty==='TASK' ? ' · '+(i.pri || 'Medium')+' priority' : ''}</span>
             <span class="ops">
               <button class="move-up" title="Preview and move up" aria-label="Move ${i.nm} up, position ${idx+1} of ${bItems.length}"
@@ -854,13 +851,14 @@ function removeItem(idx){
   emit('builder.item_removed', it.ty+' "'+it.nm+'" · draft only, enrolled agents unaffected');
   render();
 }
-let pointerDrag = { from:null, target:null, after:false, pointerId:null, handle:null, row:null, ghost:null, offsetX:0, offsetY:0 };
+let pointerDrag = { from:null, current:null, pointerId:null, handle:null, row:null, ghost:null, offsetX:0, offsetY:0, workingItems:null, moved:false };
 function builderRows(){ return Array.from(document.querySelectorAll('#reorder-list > .itemrow:not(.reorder-ghost)')); }
 function clearMovePreview(){
   document.querySelectorAll('.reorder-ghost').forEach(el => el.remove());
   document.querySelectorAll('.preview-target').forEach(el => el.classList.remove('preview-target'));
 }
 function showMovePreview(idx,dir){
+  if (pointerDrag.from !== null) return;
   clearMovePreview();
   const rows = builderRows();
   const target = rows[idx + dir];
@@ -914,8 +912,10 @@ function moveItem(idx,dir){
 }
 function startPointerReorder(event,idx){
   if (event.pointerType === 'mouse' && event.button !== 0) return;
+  if (pointerDrag.from !== null) { event.preventDefault(); return; }
   event.preventDefault();
   clearMovePreview();
+  document.querySelectorAll('.pointer-drag-ghost').forEach(el => el.remove());
   const row = builderRows()[idx];
   if (!row) return;
   const rect = row.getBoundingClientRect();
@@ -933,15 +933,31 @@ function startPointerReorder(event,idx){
   ghost.style.top = rect.top + 'px';
   document.body.appendChild(ghost);
   pointerDrag = {
-    from:idx, target:idx, after:false, pointerId:event.pointerId, handle:event.currentTarget,
-    row, ghost, offsetX:event.clientX-rect.left, offsetY:event.clientY-rect.top
+    from:idx, current:idx, pointerId:event.pointerId, handle:event.currentTarget,
+    row, ghost, offsetX:event.clientX-rect.left, offsetY:event.clientY-rect.top,
+    workingItems:(S.draft || S.cert.items).slice(), moved:false
   };
   event.currentTarget.setPointerCapture(event.pointerId);
-  event.currentTarget.addEventListener('pointermove', movePointerReorder);
-  event.currentTarget.addEventListener('pointerup', commitPointerReorder, { once:true });
-  event.currentTarget.addEventListener('pointercancel', cancelPointerReorder, { once:true });
+  window.addEventListener('pointermove', movePointerReorder);
+  window.addEventListener('pointerup', commitPointerReorder);
+  window.addEventListener('pointercancel', cancelPointerReorder);
   window.addEventListener('keydown', cancelPointerOnEscape);
   row.classList.add('dragging');
+}
+function animateLiveDisplacement(rows,before,source){
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  rows.forEach(row => {
+    if (row === source) return;
+    const previous = before.get(row);
+    if (previous === undefined) return;
+    const delta = previous - row.getBoundingClientRect().top;
+    if (Math.abs(delta) < 1) return;
+    row.getAnimations().forEach(animation => animation.cancel());
+    row.animate(
+      [{ transform:`translateY(${delta}px)` }, { transform:'translateY(0)' }],
+      { duration:160, easing:'cubic-bezier(.2,.8,.2,1)' }
+    );
+  });
 }
 function movePointerReorder(event){
   if (pointerDrag.from === null || event.pointerId !== pointerDrag.pointerId) return;
@@ -951,51 +967,77 @@ function movePointerReorder(event){
   const edge = 72;
   if (event.clientY < edge) window.scrollBy({ top:-12, behavior:'auto' });
   if (event.clientY > window.innerHeight-edge) window.scrollBy({ top:12, behavior:'auto' });
-  builderRows().forEach(el => el.classList.remove('drop-before','drop-after'));
   const list = document.getElementById('reorder-list');
   const listRect = list?.getBoundingClientRect();
   if (!listRect || event.clientX < listRect.left || event.clientX > listRect.right || event.clientY < listRect.top-18 || event.clientY > listRect.bottom+18) {
-    pointerDrag.target = null;
     return;
   }
-  const candidates = builderRows().filter(row => row !== pointerDrag.row);
+  const rows = builderRows();
+  const before = new Map(rows.map(row => [row,row.getBoundingClientRect().top]));
+  const candidates = rows.filter(row => row !== pointerDrag.row);
   let target = candidates.find(row => event.clientY < row.getBoundingClientRect().top + row.offsetHeight/2);
-  let after = false;
-  if (!target) { target = candidates[candidates.length-1] || pointerDrag.row; after = true; }
-  target.classList.add(after ? 'drop-after' : 'drop-before');
-  pointerDrag.target = Number(target.dataset.index);
-  pointerDrag.after = after;
+  if (target) list.insertBefore(pointerDrag.row,target);
+  else list.appendChild(pointerDrag.row);
+  const liveRows = builderRows();
+  const nextIndex = liveRows.indexOf(pointerDrag.row);
+  if (nextIndex === pointerDrag.current) return;
+  const [item] = pointerDrag.workingItems.splice(pointerDrag.current,1);
+  pointerDrag.workingItems.splice(nextIndex,0,item);
+  pointerDrag.current = nextIndex;
+  pointerDrag.moved = true;
+  animateLiveDisplacement(liveRows,before,pointerDrag.row);
+  const live = document.getElementById('reorder-live');
+  if (live) live.textContent = item.nm+' now at position '+(nextIndex+1)+' of '+pointerDrag.workingItems.length+'. Release to keep this order.';
 }
 function finishPointerReorder(commit,restoreFocus){
   const state = pointerDrag;
   if (state.handle) {
-    state.handle.removeEventListener('pointermove', movePointerReorder);
-    state.handle.removeEventListener('pointerup', commitPointerReorder);
-    state.handle.removeEventListener('pointercancel', cancelPointerReorder);
     try { if (state.handle.hasPointerCapture(state.pointerId)) state.handle.releasePointerCapture(state.pointerId); } catch (_) {}
   }
+  window.removeEventListener('pointermove', movePointerReorder);
+  window.removeEventListener('pointerup', commitPointerReorder);
+  window.removeEventListener('pointercancel', cancelPointerReorder);
   window.removeEventListener('keydown', cancelPointerOnEscape);
   state.ghost?.remove();
-  builderRows().forEach(el => el.classList.remove('dragging','drop-before','drop-after'));
-  pointerDrag = { from:null, target:null, after:false, pointerId:null, handle:null, row:null, ghost:null, offsetX:0, offsetY:0 };
-  if (!commit || state.target === null) {
-    const live = document.getElementById('reorder-live');
-    if (live) live.textContent = 'Reorder cancelled. Item order is unchanged.';
-    if (restoreFocus) {
-      const row = document.querySelector(`[data-index="${state.from}"]`);
-      row?.querySelector('.move-down:not(:disabled),.move-up:not(:disabled)')?.focus();
-    }
+  builderRows().forEach(el => {
+    el.classList.remove('dragging');
+    el.getAnimations().forEach(animation => animation.cancel());
+  });
+  pointerDrag = { from:null, current:null, pointerId:null, handle:null, row:null, ghost:null, offsetX:0, offsetY:0, workingItems:null, moved:false };
+  if (!commit) {
+    render();
+    requestAnimationFrame(() => {
+      const live = document.getElementById('reorder-live');
+      if (live) live.textContent = 'Reorder cancelled. Item order is unchanged.';
+      if (restoreFocus) {
+        const row = document.querySelector(`[data-index="${state.from}"]`);
+        row?.querySelector('.move-down:not(:disabled),.move-up:not(:disabled)')?.focus();
+      }
+    });
     return;
   }
-  let to = state.target + (state.after ? 1 : 0);
-  if (to > state.from) to--;
-  reorderItem(state.from,to,'pointer drag and drop');
+  if (!state.moved || state.current === state.from) {
+    const live = document.getElementById('reorder-live');
+    if (live) live.textContent = 'Item order is unchanged.';
+    return;
+  }
+  const item = state.workingItems[state.current];
+  draftify();
+  S.draft = state.workingItems.slice();
+  emit('builder.item_reordered', item.ty+' "'+item.nm+'" · position '+(state.current+1)+' · pointer drag and drop · live displacement · draft only');
+  render();
+  announceReorder(item,state.from,state.current,'pointer drag and drop · live displacement');
+  toast(item.nm+' moved to position '+(state.current+1)+'. The live version is unchanged.');
 }
 function commitPointerReorder(event){
+  if (pointerDrag.from === null || event.pointerId !== pointerDrag.pointerId) return;
   event.preventDefault();
   finishPointerReorder(true);
 }
-function cancelPointerReorder(){ finishPointerReorder(false); }
+function cancelPointerReorder(event){
+  if (pointerDrag.from === null || event.pointerId !== pointerDrag.pointerId) return;
+  finishPointerReorder(false);
+}
 function cancelPointerOnEscape(event){
   if (event.key === 'Escape') {
     event.preventDefault();
