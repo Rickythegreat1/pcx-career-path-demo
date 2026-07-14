@@ -19,7 +19,7 @@
   --blue-bright:#2B7FFF; --navy2:#1E2939;
   --green:#00A63E; --green-100:#DCFCE7; --green-800:#166534;
   --amber:#E17100; --amber-100:#FFEDD4; --amber-800:#92400E;
-  --red:#E7000B; --navy:#101828;
+  --red:#E7000B; --navy:#101828; --control-border:#71717A;
   --sans:"Inter",-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;
   --mono:"SF Mono",Menlo,Consolas,monospace;
 }
@@ -62,7 +62,7 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
 .badge.zinc{background:var(--z100);color:var(--z600);border:1px solid var(--z200)}
 .btn{background:var(--blue);color:#fff;font-weight:600;font-size:12px;padding:8px 14px;border-radius:8px}
 .btn:hover{background:var(--blue-700)}
-.btn.ghost{background:#fff;color:var(--z700);border:1px solid var(--z200);font-weight:500}
+.btn.ghost{background:#fff;color:var(--z700);border:1px solid var(--control-border);font-weight:500}
 .btn.ghost:hover{background:var(--z50)}
 .btn.dark{background:var(--z900)}
 .btn.dark:hover{background:var(--z800)}
@@ -82,9 +82,10 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
 .whybox{display:none;margin-top:10px;background:#fff;border:1px solid var(--blue-200);border-radius:8px;padding:10px 14px;font-size:12.5px;color:var(--z600)}
 .whybox.open{display:block}
 .whybox b{font-family:var(--mono);font-size:10.5px;color:var(--blue-700)}
+.feed{list-style:none;margin:0;padding:0}
 .feed .item{display:flex;align-items:center;gap:13px;padding:13px 16px;border-bottom:1px solid var(--z100)}
 .feed .item:last-child{border-bottom:none}
-.feed .chk{width:16px;height:16px;border:1.5px solid var(--z300);border-radius:4px;flex:none;cursor:pointer;display:grid;place-items:center;color:#fff;font-size:11px}
+.feed .chk{width:16px;height:16px;border:1.5px solid var(--control-border);border-radius:4px;flex:none;cursor:pointer;display:grid;place-items:center;color:#fff;font-size:11px}
 .feed .item.done .chk{background:var(--blue-bright);border-color:var(--blue-bright)}
 .feed .item.done .t{text-decoration:line-through;color:var(--z500)}
 .feed .grow{min-width:0;flex:1}
@@ -120,6 +121,7 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
 .stg .ct{font-size:11.5px;color:var(--z500)}
 .path{padding:8px 10px 8px 22px;border-radius:7px;font-size:13px;color:var(--z600);cursor:pointer;display:flex;justify-content:space-between;gap:8px;align-items:center}
 .path.sel{background:var(--blue-50);color:var(--blue-700);font-weight:600}
+.path.locked{background:var(--z50);color:var(--z600);cursor:default}
 .path .badge{font-size:9.5px;padding:1px 7px}
 .reorder-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
 .reorder-head h2{margin-bottom:0}
@@ -149,7 +151,7 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
 .itemrow .ops button:disabled{opacity:.3;cursor:not-allowed}
 .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 .addrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
-.addrow button{border:1px dashed var(--z300);border-radius:7px;padding:6px 11px;font-size:12px;color:var(--z600)}
+.addrow button{border:1px dashed var(--control-border);border-radius:7px;padding:6px 11px;font-size:12px;color:var(--z600)}
 .addrow button:hover{border-color:var(--blue);color:var(--blue-700)}
 .pubwarn{font-size:12.5px;color:var(--red);margin-top:10px;display:none}
 .pubwarn.show{display:block}
@@ -170,6 +172,7 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
 .flag{display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--z100);font-size:13px}
 .flag:last-child{border-bottom:none}
 .flag .fdot{width:9px;height:9px;border-radius:99px;flex:none}
+input,select{border-color:var(--control-border)!important}
 
 /* ---------- event drawer ---------- */
 .drawer{position:static;background:var(--navy);color:#B8C1D1;z-index:40;font-family:var(--mono);font-size:11.5px}
@@ -227,11 +230,11 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
 </head>
 <body>
 <div class="app">
-  <aside class="side">
+  <aside class="side" aria-label="Application sidebar">
     <div class="logo"><div class="mark">P</div><div><b>PCx</b><span>Career Path Demo</span></div></div>
     <nav aria-label="Primary">
       <div class="grp">Agent's view</div>
-      <a href="#" class="on" id="nav-home" onclick="setRole('agent');return false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9.5 12 3l9 6.5V20a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20Z"/><path d="M9 21.5V12h6v9.5"/></svg>Home</a>
+      <a href="#" class="on" id="nav-home" aria-current="page" onclick="setRole('agent');return false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9.5 12 3l9 6.5V20a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20Z"/><path d="M9 21.5V12h6v9.5"/></svg>Home</a>
       <a href="#" class="dim" aria-disabled="true" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 3.5h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2Z"/><path d="M22 3.5h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7Z"/></svg>Resources</a>
       <a href="#" class="dim" aria-disabled="true" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>My Business</a>
       <a href="#" class="dim" aria-disabled="true" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>My Team</a>
@@ -324,9 +327,7 @@ const S = {
   rosterOpen: false,
   published: false,
   quizOpen: false,
-  queue: [
-    { id:'q0', who:'Mike Torres', what:'Buyer Basics · Build a CMA for a real address', ctx:'Submitted a CMA for 4482 E Palo Verde Dr. Comps chosen from the last 90 days, adjustments noted in the file.', done:false }
-  ],
+  queue: [],
   gateReady: false,
   stageAdvanced: false,
   events: []
@@ -467,24 +468,24 @@ function agentView() {
       <div>
         ${heroHtml}
         <div class="mini" style="margin:0 0 8px 2px;display:flex;justify-content:space-between"><span>Then, in order</span><a href="#" style="color:var(--blue-700);text-transform:none;letter-spacing:0" onclick="document.getElementById('newtask').focus();return false">+ add your own</a></div>
-        <div class="card feed">
+        <ol class="card feed" aria-label="Next actions in order">
           ${rest.map(f => `
-            <div class="item">
+            <li class="item">
               <div class="chk" role="button" tabindex="0" aria-label="Mark done: ${f.ref.nm}" onclick="completeItem('${f.kind}','${f.ref.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();completeItem('${f.kind}','${f.ref.id}')}"></div>
               <div class="grow"><div class="t">${f.ref.nm}</div>
               <div class="m">${f.kind==='cert' ? S.cert.name+' · '+f.ref.ty.toLowerCase()+(f.ref.note?' · sent back by Joe: &ldquo;'+f.ref.note+'&rdquo;':'') : f.ref.m + priTag(f.ref)}</div></div>
               <span class="tierchip">${tierName(f)}</span>
-            </div>`).join('')}
+            </li>`).join('')}
           ${waitingItem ? `
-            <div class="item waiting">
-              <div class="chk">⏳</div>
+            <li class="item waiting">
+              <div class="chk" aria-hidden="true">⏳</div>
               <div class="grow"><div class="t">${waitingItem.nm}</div>
               <div class="m">submitted · waiting on Joe to verify · not counted as your action</div></div>
               <span class="tierchip">waiting</span>
-            </div>`:''}
-          ${feed.length===0 && !waitingItem ? `<div class="item"><div class="grow"><div class="t" style="color:var(--z500)">All caught up.</div><div class="m">${S.stageAdvanced && !S.masteryStarted ? 'Next suggestion: choose what you lead with in Mastery Skills, above.' : S.stageAdvanced ? 'Next suggestion: keep working '+S.masteryStarted+'; its next item lands here.' : 'Next suggestion: start Database Certification, the first open elective in your stage.'}</div></div></div>`:''}
-          ${feed.length===1 && !waitingItem ? `<div class="item"><div class="grow"><div class="m supporting-copy">Nothing else in line after the card above.</div></div></div>`:''}
-        </div>
+            </li>`:''}
+          ${feed.length===0 && !waitingItem ? `<li class="item"><div class="grow"><div class="t" style="color:var(--z500)">All caught up.</div><div class="m">${S.stageAdvanced && !S.masteryStarted ? 'Next suggestion: choose what you lead with in Mastery Skills, above.' : S.stageAdvanced ? 'Next suggestion: keep working '+S.masteryStarted+'; its next item lands here.' : 'Next suggestion: start Database Certification, the first open elective in your stage.'}</div></div></li>`:''}
+          ${feed.length===1 && !waitingItem ? `<li class="item"><div class="grow"><div class="m supporting-copy">Nothing else in line after the card above.</div></div></li>`:''}
+        </ol>
         <div class="card" style="margin-top:14px;padding:13px 16px">
           <div class="mini" style="margin-bottom:8px">Add your own task</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -512,10 +513,10 @@ function agentView() {
         </div>
         <div class="card">
           <h2>Career stage</h2>
-          <div class="stage-ln done"><span class="sdot"></span>Getting Set Up</div>
-          <div class="stage-ln ${S.stageAdvanced?'done':'cur'}"><span class="sdot"></span>Fundamentals</div>
-          <div class="stage-ln ${S.stageAdvanced?'cur':''}"><span class="sdot"></span>Mastery Skills</div>
-          <div class="stage-ln"><span class="sdot"></span>Wealth Building</div>
+          <div class="stage-ln done"><span class="sdot" aria-hidden="true"></span><span class="sr-only">Completed: </span>Getting Set Up</div>
+          <div class="stage-ln ${S.stageAdvanced?'done':'cur'}"><span class="sdot" aria-hidden="true"></span><span class="sr-only">${S.stageAdvanced?'Completed':'Current'}: </span>Fundamentals</div>
+          <div class="stage-ln ${S.stageAdvanced?'cur':''}"><span class="sdot" aria-hidden="true"></span>${S.stageAdvanced?'<span class="sr-only">Current: </span>':''}Mastery Skills</div>
+          <div class="stage-ln"><span class="sdot" aria-hidden="true"></span>Wealth Building</div>
           <div class="ln" style="margin-top:6px">Buyer Basics ✓ <span class="supporting-copy" title="${S.buyerBasics.itemsDone}/${S.buyerBasics.itemsTotal} items · quiz ${S.buyerBasics.quiz} · verified by ${S.buyerBasics.verifiedBy}" style="font-size:11px">(${S.buyerBasics.itemsDone}/${S.buyerBasics.itemsTotal} · verified)</span> · Listing Basics ${S.gateReady||S.stageAdvanced?'✓':certDone+'/'+S.cert.items.length}${S.dbEnrolled?' · Database enrolled':''}</div>
           ${!S.dbEnrolled && !S.stageAdvanced ? `<button class="btn ghost" style="margin-top:10px;width:100%;font-size:12.5px" onclick="enrollDb()">Start an elective: Database Certification</button>`:''}
           ${S.stageAdvanced ? `<div class="ln" style="margin-top:6px">Now open: Buyer Mastery · Listing Mastery</div>
@@ -561,7 +562,7 @@ function leaderView() {
               <div class="ctx">${q.ctx}</div>
               <div class="row">
                 <button class="btn" aria-label="Verify ${q.who}: ${q.what}" onclick="verify('${q.id}')">Verify</button>
-                <button class="btn ghost" aria-label="Send back ${q.who}: ${q.what} with note" onclick="sendBack('${q.id}')">Send back with note</button>
+                ${q.id === 'qS' ? `<button class="btn ghost" aria-label="Send back ${q.who}: ${q.what} with note" onclick="sendBack('${q.id}')">Send back with note</button>` : ''}
               </div>
             </div>`).join('')}
           <div class="q-empty" style="display:${open.length?'none':'block'}">Queue clear. Verified work updates each agent's Home within seconds.</div>
@@ -639,8 +640,8 @@ function builderView() {
         ${S.newPaths.map(p=>`<div class="path"><span>${p}</span><span class="badge zinc">elective · draft</span></div>`).join('')}
         <button style="margin:2px 0 6px 22px;font-size:12px;color:var(--blue-700)" onclick="addPath()">+ add a certification</button>
         <div class="stg"><div class="nm">3 · Mastery Skills</div><div class="ct">${S.stageAdvanced ? 'open · Sarah advanced at the gate' : 'opens at the Fundamentals gate'}</div></div>
-        <div class="path" ${S.stageAdvanced?'':'style="opacity:.6"'}><span>Buyer Mastery</span><span class="badge zinc">required</span></div>
-        <div class="path" ${S.stageAdvanced?'':'style="opacity:.6"'}><span>Listing Mastery</span><span class="badge zinc">required</span></div>
+        <div class="path ${S.stageAdvanced?'':'locked'}"><span>Buyer Mastery</span><span class="badge zinc">required</span></div>
+        <div class="path ${S.stageAdvanced?'':'locked'}"><span>Listing Mastery</span><span class="badge zinc">required</span></div>
         <div class="stg"><div class="nm">4 · Wealth Building</div><div class="ct">2 paths</div></div>
       </div></div>
       <div class="b-col"><div class="card">
@@ -717,9 +718,13 @@ function render() {
     sw.classList.toggle('on', on);
     sw.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
-  document.getElementById('nav-home').classList.toggle('on', S.role==='agent');
-  document.getElementById('nav-leader').classList.toggle('on', S.role==='leader');
-  document.getElementById('nav-builder').classList.toggle('on', S.role==='builder');
+  [['nav-home','agent'],['nav-leader','leader'],['nav-builder','builder']].forEach(([id,role]) => {
+    const link = document.getElementById(id);
+    const current = S.role === role;
+    link.classList.toggle('on', current);
+    if (current) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
+  });
   if (restore) requestAnimationFrame(() => {
     let target = restore.id ? document.getElementById(restore.id) : null;
     const candidates = Array.from(v.querySelectorAll(restore.tag));
