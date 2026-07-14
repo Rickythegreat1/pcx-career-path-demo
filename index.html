@@ -67,7 +67,7 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
 .btn.dark{background:var(--z900)}
 .btn.dark:hover{background:var(--z800)}
 .btn:disabled{background:var(--z300);cursor:not-allowed}
-.mini{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--z500)}
+.mini{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--z600)}
 .toast{position:fixed;bottom:64px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--z900);color:#fff;padding:10px 18px;border-radius:9px;font-size:13.5px;opacity:0;transition:.25s;z-index:60;pointer-events:none;max-width:92vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
@@ -229,14 +229,16 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
 <div class="app">
   <aside class="side">
     <div class="logo"><div class="mark">P</div><div><b>PCx</b><span>Career Path Demo</span></div></div>
-    <div class="grp">Agent's view</div>
-    <a href="#" class="on" id="nav-home" onclick="setRole('agent');return false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9.5 12 3l9 6.5V20a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20Z"/><path d="M9 21.5V12h6v9.5"/></svg>Home</a>
-    <a href="#" class="dim"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 3.5h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2Z"/><path d="M22 3.5h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7Z"/></svg>Resources</a>
-    <a href="#" class="dim"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>My Business</a>
-    <a href="#" class="dim"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>My Team</a>
-    <div class="grp">Leadership</div>
-    <a href="#" id="nav-leader" onclick="setRole('leader');return false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/></svg>Verifications</a>
-    <a href="#" id="nav-builder" onclick="setRole('builder');return false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>Career Path Builder</a>
+    <nav aria-label="Primary">
+      <div class="grp">Agent's view</div>
+      <a href="#" class="on" id="nav-home" onclick="setRole('agent');return false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9.5 12 3l9 6.5V20a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20Z"/><path d="M9 21.5V12h6v9.5"/></svg>Home</a>
+      <a href="#" class="dim" aria-disabled="true" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 3.5h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2Z"/><path d="M22 3.5h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7Z"/></svg>Resources</a>
+      <a href="#" class="dim" aria-disabled="true" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>My Business</a>
+      <a href="#" class="dim" aria-disabled="true" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>My Team</a>
+      <div class="grp">Leadership</div>
+      <a href="#" id="nav-leader" onclick="setRole('leader');return false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/></svg>Verifications</a>
+      <a href="#" id="nav-builder" onclick="setRole('builder');return false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>Career Path Builder</a>
+    </nav>
   </aside>
   <main>
     <div class="topbar">
@@ -395,9 +397,10 @@ function escapeHTML(value) {
 }
 function emit(name, detail) {
   const time = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  S.events.unshift(`${time}  <b>${name}</b>  ${detail}`);
+  S.events.push(`${time}  <b>${name}</b>  ${detail}`);
   const log = document.getElementById('dlog');
-  log.innerHTML = S.events.slice(0, 24).map(e => `<div class="ev">${e}</div>`).join('');
+  log.innerHTML = S.events.slice(-24).map(e => `<div class="ev">${e}</div>`).join('');
+  log.scrollTop = log.scrollHeight;
 }
 function toast(msg) {
   const el = document.getElementById('toast');
@@ -429,9 +432,9 @@ function agentView() {
       <div class="act">
         ${hero.gateInReach ? '<span class="badge green">GATE IN REACH</span>' : ''}
         <button class="btn" onclick="completeTop()">${hero.kind==='cert' && hero.ref.ty==='VERIFY' ? 'Done, submit for verification' : 'Mark complete'}</button>
-        <span class="why" role="button" tabindex="0" aria-expanded="false" onclick="toggleWhy(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleWhy(this)}">why is this first?</span>
+        <span class="why" role="button" tabindex="0" aria-expanded="false" aria-controls="ranking-explanation" onclick="toggleWhy(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleWhy(this)}">why is this first?</span>
       </div>
-      <div class="whybox"><b>${tierName(hero)}</b> · ${
+      <div class="whybox" id="ranking-explanation"><b>${tierName(hero)}</b> · ${
         hero.tier===1 ? 'A commitment is past due. Nothing outranks a broken commitment.' :
         hero.tier<3 ? (hero.ref.src==='leader'
           ? 'Joe asked, and it is due today. It ranks right behind scheduled events, ordered with the rest of today’s work by its priority.'
@@ -719,7 +722,7 @@ function render() {
     let target = restore.id ? document.getElementById(restore.id) : null;
     const candidates = Array.from(v.querySelectorAll(restore.tag));
     if (!target && restore.label) target = candidates.find(el => el.getAttribute('aria-label') === restore.label);
-    if (!target && restore.text) target = candidates.find(el => el.textContent.trim() === restore.text);
+    if (!target && !restore.label && restore.text) target = candidates.find(el => el.textContent.trim() === restore.text);
     if (!target) {
       target = v.querySelector('h1');
       if (target) target.setAttribute('tabindex', '-1');
