@@ -36,7 +36,7 @@ aside.side{background:var(--navy);color:#fff;padding:20px 16px;display:flex;flex
 .side .logo .mark{width:40px;height:40px;background:var(--blue);border-radius:8px;display:grid;place-items:center;font-weight:700;font-size:15px}
 .side .logo b{font-size:14px}
 .side .logo span{display:block;font-size:11px;color:#8B95A7}
-.side .grp{font-size:12px;font-weight:600;letter-spacing:.05em;color:#6B7689;padding:14px 10px 6px;text-transform:uppercase}
+.side .grp{font-size:12px;font-weight:600;letter-spacing:.05em;color:#AAB4C6;padding:14px 10px 6px;text-transform:uppercase}
 .side a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;color:#A7B0C0;font-size:14px;font-weight:500;text-decoration:none}
 .side a.on{background:var(--navy2);color:#fff}
 .side a.dim{opacity:.45;pointer-events:none}
@@ -400,8 +400,12 @@ function emit(name, detail) {
 }
 function toast(msg) {
   const el = document.getElementById('toast');
-  el.textContent = msg; el.classList.add('show');
-  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 2600);
+  clearTimeout(el._t); cancelAnimationFrame(el._announceFrame);
+  el.classList.remove('show'); el.textContent = '';
+  el._announceFrame = requestAnimationFrame(() => {
+    el.textContent = msg; el.classList.add('show');
+    el._t = setTimeout(() => el.classList.remove('show'), 2600);
+  });
 }
 
 /* ============================================================
@@ -494,7 +498,7 @@ function agentView() {
           <h2>Listing Basics · ${S.gateReady||S.stageAdvanced ? 'concluded ✓' : 'focus'}</h2>
           ${!S.stageAdvanced ? '<div class="ln supporting-copy" style="font-size:11.5px">Sarah&rsquo;s pick at Fundamentals entry; Buyer Basics ran alongside it</div>' : ''}
           <div class="bar"><i style="width:${Math.round(certDone/S.cert.items.length*100)}%"></i></div>
-          <div class="ln">${certDone} of ${S.cert.items.length} items · <a href="#" style="color:var(--blue-700)" onclick="S.quizOpen=!S.quizOpen;render();return false">quiz passed ${S.cert.quiz.score}% ${S.quizOpen?'▾':'▸'}</a></div>
+          <div class="ln">${certDone} of ${S.cert.items.length} items · <a id="quiz-toggle" href="#" style="color:var(--blue-700)" onclick="S.quizOpen=!S.quizOpen;render();return false">quiz passed ${S.cert.quiz.score}% ${S.quizOpen?'▾':'▸'}</a></div>
           ${S.quizOpen?`<div class="ln" style="font-family:var(--mono);font-size:11.5px;background:var(--z50);border-radius:7px;padding:8px 10px;margin:4px 0">
             attempt 1 · Jun 30 · 72% · below 80, retake after cooldown<br>
             attempt 2 · Jul 2 · 88% · passed · graded server-side, logged</div>`:''}
@@ -584,7 +588,7 @@ function leaderView() {
           <div class="ln supporting-copy" style="margin-top:8px;font-size:11.5px">One agent or a group: write it once, the system creates one instance per person.</div>
           <div class="ln" style="margin-top:6px;font-family:var(--mono);font-size:11px">
             Open tasks · Sarah ${S.tasks.filter(t=>!t.done).length} · Mike ${openCount('Mike Torres')} · Dana ${openCount('Dana Wells')}
-            <a href="#" style="color:var(--blue-700);margin-left:4px" onclick="S.rosterOpen=!S.rosterOpen;render();return false">${S.rosterOpen?'hide ▾':'inspect ▸'}</a>
+            <a id="roster-toggle" href="#" style="color:var(--blue-700);margin-left:4px" onclick="S.rosterOpen=!S.rosterOpen;render();return false">${S.rosterOpen?'hide ▾':'inspect ▸'}</a>
           </div>
           ${S.rosterOpen ? `
           <div class="ln" style="margin-top:6px;font-family:var(--mono);font-size:10.5px;background:var(--z50);border-radius:7px;padding:8px 10px;line-height:1.7">
