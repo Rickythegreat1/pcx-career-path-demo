@@ -46,7 +46,7 @@ main{min-width:0}
 .topbar .crumb{font-size:13px;color:var(--z500)}
 .topbar .spacer{flex:1}
 .switch{display:flex;background:var(--z100);border:1px solid var(--z200);border-radius:9px;padding:3px;gap:2px}
-.switch button{padding:6px 13px;border-radius:6px;font-size:12.5px;font-weight:600;color:var(--z500)}
+.switch button{padding:6px 13px;border-radius:6px;font-size:12.5px;font-weight:600;color:var(--z600)}
 .switch button.on{background:#fff;color:var(--z900);box-shadow:0 1px 2px #0002}
 .content{padding:32px 32px 70px;max-width:1120px}
 
@@ -203,11 +203,12 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
 }
 @media(max-width:560px){
   .topbar{padding:10px 14px;flex-wrap:wrap}
+  .topbar > nav{flex:1 0 100%;min-width:0}
   .topbar .crumb{display:none}
   .topbar .mini{display:none}
   .topbar .mock-badge{display:none}
   .topbar .spacer{display:none}
-  .switch{flex:1 0 100%;min-width:0}
+  .switch{width:100%;min-width:0}
   .switch button{flex:1;padding:9px 4px;font-size:11px;min-height:44px}
   .itemrow{display:grid;grid-template-columns:44px 52px minmax(0,1fr);grid-template-areas:"grip type name" "ops ops ops";gap:6px 8px}
   .itemrow .grip{grid-area:grip}
@@ -245,22 +246,24 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
       <span class="badge zinc mock-badge" style="flex:none" title="Single-file interactive mock. State lives in this page and resets on refresh.">mock demo · no backend</span>
       <div class="spacer"></div>
       <span class="mini" style="flex:none">View as</span>
-      <div class="switch" role="group" aria-label="View as">
-        <button id="sw-agent" class="on" aria-pressed="true" onclick="setRole('agent')">Sarah · Agent</button>
-        <button id="sw-leader" aria-pressed="false" onclick="setRole('leader')">Joe · Leader</button>
-        <button id="sw-builder" aria-pressed="false" onclick="setRole('builder')">Builder</button>
-      </div>
+      <nav aria-label="View selector">
+        <div class="switch" role="group" aria-label="View as">
+          <button id="sw-agent" class="on" aria-pressed="true" onclick="setRole('agent')">Sarah · Agent</button>
+          <button id="sw-leader" aria-pressed="false" onclick="setRole('leader')">Joe · Leader</button>
+          <button id="sw-builder" aria-pressed="false" onclick="setRole('builder')">Builder</button>
+        </div>
+      </nav>
     </div>
     <div class="content" id="view"></div>
   </main>
 </div>
 
-<div class="drawer" id="drawer">
+<aside class="drawer" id="drawer" aria-label="Event history">
   <div class="dhead" role="button" tabindex="0" aria-expanded="false" aria-controls="dlog" onclick="toggleDrawer()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleDrawer()}">
     <div class="pulse"></div><b>UNDER THE HOOD</b><span>every action is an event · tap to expand</span>
   </div>
   <div class="dlog" id="dlog"></div>
-</div>
+</aside>
 <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <script>
