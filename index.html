@@ -128,14 +128,15 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
 .reorder-hint{font-size:10.5px;color:var(--z500);text-align:right;line-height:1.35}
 .reorder-list{position:relative;list-style:none;margin:0;padding:0}
 .itemrow{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--z200);border-radius:8px;margin-bottom:7px;background:var(--z50);position:relative;transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .18s,border-color .18s,opacity .18s,background .18s}
-.itemrow:hover:not(.dragging){transform:translateY(-1px);box-shadow:0 5px 14px #1018280d;border-color:var(--z300)}
 .itemrow.vrow{background:var(--green-100);border-color:#86EFAC}
 .itemrow.dragging{opacity:.16;transform:none;box-shadow:none;border-style:dashed;background:var(--blue-50)}
-.itemrow.preview-target{border-color:var(--blue-200);background:#fff;box-shadow:0 0 0 3px var(--blue-50)}
-.itemrow.reorder-ghost{position:absolute;z-index:8;pointer-events:none;margin:0;opacity:0;transform:translateY(8px) scale(.99);border:1.5px solid var(--blue);background:color-mix(in srgb,#fff 88%,var(--blue-50));box-shadow:0 14px 34px #155dfc26,0 2px 8px #10182814}
-.itemrow.reorder-ghost.show{opacity:.82;transform:translateY(0) scale(1)}
+.itemrow.preview-source{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-50)}
+.itemrow.preview-target{border-color:var(--blue-200);background:var(--blue-50);box-shadow:0 0 0 3px var(--blue-50)}
+.reorder-insert-line{position:relative;height:0;margin:0;z-index:8;list-style:none;pointer-events:none}
+.reorder-insert-line::before{content:"";position:absolute;left:2px;right:2px;top:-4px;height:3px;border-radius:99px;background:var(--blue);box-shadow:0 0 0 3px var(--blue-50)}
+.reorder-insert-line::after{content:attr(data-label);position:absolute;right:6px;top:-17px;padding:1px 7px;border-radius:999px;background:var(--blue);color:#fff;font:700 9px/1.4 var(--mono);letter-spacing:.03em;white-space:nowrap}
+.itemrow.just-moved{border-color:#16a34a!important;background:#f0fdf4!important;box-shadow:0 0 0 3px #bbf7d0!important}
 .grip{width:32px;height:32px;flex:none;display:grid;place-items:center;color:var(--z600);border-radius:7px;cursor:grab;font-size:15px;letter-spacing:-4px;padding-right:4px;touch-action:none;user-select:none}
-.grip:hover{color:var(--blue-700);background:var(--blue-50)}
 .grip:active{cursor:grabbing}
 .pointer-drag-ghost{position:fixed!important;z-index:100;pointer-events:none;margin:0!important;opacity:.94;transform:rotate(.35deg) scale(1.015);border-color:var(--blue)!important;background:#fff!important;box-shadow:0 18px 42px #10182824,0 4px 12px #155dfc22!important}
 .itemrow .ty{font-family:var(--mono);font-size:9.5px;font-weight:600;color:var(--blue-700);width:52px;flex:none}
@@ -143,7 +144,6 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
 .itemrow .nm{font-size:13px;flex:1;min-width:0}
 .itemrow .ops{display:flex;gap:2px}
 .itemrow .ops button{color:var(--z600);width:32px;height:32px;display:grid;place-items:center;border-radius:6px;font-size:13px;transition:transform .16s,background .16s,color .16s}
-.itemrow .ops button:hover:not(:disabled){background:var(--z200);color:var(--z700)}
 .itemrow .ops button:active:not(:disabled){transform:scale(.88)}
 .itemrow .ops button:disabled{opacity:.3;cursor:not-allowed}
 .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
@@ -153,6 +153,11 @@ h1{font-size:20px;font-weight:700;letter-spacing:-.01em}
 .pubwarn{font-size:12.5px;color:var(--red);margin-top:10px;display:none}
 .pubwarn.show{display:block}
 .b-set .ln{font-size:12.5px;color:var(--z600);padding:4px 0;border-bottom:1px solid var(--z100)}
+@media(hover:hover) and (pointer:fine){
+  #reorder-list:not(.preview-suppressed) .itemrow.pointer-hover:not(.dragging){transform:translateY(-1px);box-shadow:0 5px 14px #1018280d;border-color:var(--z300)}
+  #reorder-list:not(.preview-suppressed) .grip.pointer-hover-control{color:var(--blue-700);background:var(--blue-50)}
+  #reorder-list:not(.preview-suppressed) .itemrow .ops button.pointer-hover-control:not(:disabled){background:var(--z200);color:var(--z700)}
+}
 .b-set .ln:last-child{border-bottom:none}
 .b-set .ln b{color:var(--z900);font-weight:600}
 
@@ -222,7 +227,7 @@ input,select{border-color:var(--control-border)!important}
   .drawer{position:static}
   .content,body.drawer-open .content{padding-bottom:16px}
 }
-@media(prefers-reduced-motion:reduce){.itemrow,.itemrow .ops button,.toast,.reorder-ghost,.bar i{transition:none!important}.gatecard.show{animation:none}.pointer-drag-ghost{transform:none}}
+@media(prefers-reduced-motion:reduce){.itemrow,.itemrow .ops button,.toast,.bar i{transition:none!important}.gatecard.show{animation:none}.pointer-drag-ghost{transform:none}}
 </style>
 </head>
 <body>
@@ -644,24 +649,25 @@ function builderView() {
       <div class="b-col"><div class="card">
         <div class="reorder-head">
           <h2>Listing Basics · ${bItems.length} items, ordered · ${S.published ? 'v'+S.ver+' live' : 'draft v'+S.ver}</h2>
-          <span class="reorder-hint">Drag a row to reorder live, or preview and move with the arrows</span>
+          <span class="reorder-hint" id="reorder-hint">Drag a row to reorder live, or preview and move with the arrows</span>
         </div>
-        <ol class="reorder-list" id="reorder-list" aria-label="Listing Basics items in order">
+        <ol class="reorder-list${movePreviewState.suppressed?' preview-suppressed':''}" id="reorder-list" aria-label="Listing Basics items in order">
         ${bItems.map((i, idx) => `
-          <li class="itemrow ${i.ty==='VERIFY'?'vrow':''}" data-index="${idx}"
+          <li class="itemrow ${i.ty==='VERIFY'?'vrow':''}" data-index="${idx}" data-item-id="${i.id}"
+            onpointerenter="setBuilderPointerHover(event,true)" onpointerleave="setBuilderPointerHover(event,false)"
             aria-label="${i.ty}: ${i.nm}${i.ty==='TASK' ? ', '+(i.pri || 'Medium')+' priority' : ''}, position ${idx+1} of ${bItems.length}">
-            <span class="grip" aria-hidden="true" onpointerdown="startPointerReorder(event,${idx})">⋮⋮</span>
+            <span class="grip" aria-hidden="true" onpointerenter="setBuilderPointerHover(event,true)" onpointerleave="setBuilderPointerHover(event,false)" onpointerdown="startPointerReorder(event,${idx})">⋮⋮</span>
             <span class="ty">${i.ty}</span><span class="nm">${i.nm}${i.ty==='TASK' ? ' · '+(i.pri || 'Medium')+' priority' : ''}</span>
             <span class="ops">
-              <button class="move-up" title="Preview and move up" aria-label="Move ${i.nm} up, position ${idx+1} of ${bItems.length}"
-                onmouseenter="showMovePreview(${idx},-1)" onmouseleave="clearMovePreview()"
-                onfocus="showMovePreview(${idx},-1)" onblur="clearMovePreview()"
-                onclick="moveItem(${idx},-1)" ${idx===0?'disabled':''}>↑</button>
-              <button class="move-down" title="Preview and move down" aria-label="Move ${i.nm} down, position ${idx+1} of ${bItems.length}"
-                onmouseenter="showMovePreview(${idx},1)" onmouseleave="clearMovePreview()"
-                onfocus="showMovePreview(${idx},1)" onblur="clearMovePreview()"
-                onclick="moveItem(${idx},1)" ${idx===bItems.length-1?'disabled':''}>↓</button>
-              <button title="remove" aria-label="Remove ${i.nm}" onclick="removeItem(${idx})">✕</button>
+              <button class="move-up" title="Preview and move up" aria-label="${idx===0 ? `Move ${i.nm} up unavailable, already first of ${bItems.length}` : `Move ${i.nm} up, from position ${idx+1} to ${idx} of ${bItems.length}`}"
+                onpointerenter="showMovePreview(event,${idx},-1)" onpointerleave="clearMovePreview();setBuilderPointerHover(event,false)"
+                onfocus="showMovePreview(event,${idx},-1)" onblur="clearMovePreview()"
+                onclick="moveItem(event,${idx},-1)" ${idx===0?'disabled':''}>↑</button>
+              <button class="move-down" title="Preview and move down" aria-label="${idx===bItems.length-1 ? `Move ${i.nm} down unavailable, already last of ${bItems.length}` : `Move ${i.nm} down, from position ${idx+1} to ${idx+2} of ${bItems.length}`}"
+                onpointerenter="showMovePreview(event,${idx},1)" onpointerleave="clearMovePreview();setBuilderPointerHover(event,false)"
+                onfocus="showMovePreview(event,${idx},1)" onblur="clearMovePreview()"
+                onclick="moveItem(event,${idx},1)" ${idx===bItems.length-1?'disabled':''}>↓</button>
+              <button title="remove" aria-label="Remove ${i.nm}" onpointerenter="setBuilderPointerHover(event,true)" onpointerleave="setBuilderPointerHover(event,false)" onclick="removeItem(${idx})">✕</button>
             </span>
           </li>`).join('')}
         </ol>
@@ -852,33 +858,108 @@ function removeItem(idx){
   render();
 }
 let pointerDrag = { from:null, current:null, pointerId:null, handle:null, row:null, ghost:null, offsetX:0, offsetY:0, workingItems:null, moved:false };
-function builderRows(){ return Array.from(document.querySelectorAll('#reorder-list > .itemrow:not(.reorder-ghost)')); }
+const moveHoverQuery = window.matchMedia('(hover: hover) and (pointer: fine)');
+const movePreviewState = { suppressed:false, focusSuppressed:false, lastInput:'pointer', lastX:null, lastY:null, trigger:null };
+function builderRows(){ return Array.from(document.querySelectorAll('#reorder-list > .itemrow')); }
 function clearMovePreview(){
-  document.querySelectorAll('.reorder-ghost').forEach(el => el.remove());
-  document.querySelectorAll('.preview-target').forEach(el => el.classList.remove('preview-target'));
+  movePreviewState.trigger = null;
+  document.querySelectorAll('.reorder-insert-line').forEach(el => el.remove());
+  document.querySelectorAll('.preview-target,.preview-source').forEach(el => el.classList.remove('preview-target','preview-source'));
+  const hint = document.getElementById('reorder-hint');
+  if (hint) hint.textContent = 'Drag a row to reorder live, or preview and move with the arrows';
 }
-function showMovePreview(idx,dir){
+function suppressMovePreview(){
+  movePreviewState.suppressed = true;
+  movePreviewState.focusSuppressed = true;
+  document.getElementById('reorder-list')?.classList.add('preview-suppressed');
+  clearBuilderPointerHover();
+}
+function armMovePreview(){
+  movePreviewState.suppressed = false;
+  document.getElementById('reorder-list')?.classList.remove('preview-suppressed');
+}
+function showMovePreview(event,idx,dir,fromFreshMove){
   if (pointerDrag.from !== null) return;
+  if (event.type === 'focus' && (movePreviewState.lastInput !== 'keyboard' || movePreviewState.focusSuppressed)) return;
+  if (event.type !== 'focus' && movePreviewState.suppressed) return;
+  if ((event.type === 'pointerenter' || fromFreshMove) && (!moveHoverQuery.matches || event.pointerType !== 'mouse')) return;
+  if (event.type !== 'focus' && event.type !== 'pointerenter' && !fromFreshMove) return;
   clearMovePreview();
+  movePreviewState.trigger = event.type === 'focus' ? 'keyboard' : 'pointer';
+  if (event.type === 'pointerenter' || fromFreshMove) setBuilderPointerHover(event,true);
   const rows = builderRows();
   const target = rows[idx + dir];
   const source = rows[idx];
   const list = document.getElementById('reorder-list');
   if (!source || !target || !list) return;
-  const ghost = source.cloneNode(true);
-  ghost.className = 'itemrow reorder-ghost' + (source.classList.contains('vrow') ? ' vrow' : '');
-  ghost.setAttribute('aria-hidden', 'true');
-  ghost.inert = true;
-  ghost.removeAttribute('draggable');
-  ghost.querySelector('.grip')?.remove();
-  ghost.querySelector('.ops')?.remove();
-  ghost.style.top = target.offsetTop + 'px';
-  ghost.style.left = target.offsetLeft + 'px';
-  ghost.style.width = target.offsetWidth + 'px';
+  const line = document.createElement('li');
+  line.className = 'reorder-insert-line';
+  line.setAttribute('aria-hidden', 'true');
+  line.dataset.label = 'new position ' + (idx + dir + 1);
+  source.classList.add('preview-source');
   target.classList.add('preview-target');
-  list.appendChild(ghost);
-  requestAnimationFrame(() => ghost.classList.add('show'));
+  const hint = document.getElementById('reorder-hint');
+  if (hint) hint.textContent = 'Move "' + source.querySelector('.nm')?.textContent.trim() + '" to position ' + (idx + dir + 1) + ' · activate to commit';
+  if (dir < 0) target.before(line); else target.after(line);
 }
+function handleMovePreviewPointerMove(event){
+  if (event.pointerType !== 'mouse') return;
+  if (movePreviewState.lastX === null) {
+    movePreviewState.lastX = event.clientX;
+    movePreviewState.lastY = event.clientY;
+    return;
+  }
+  if (!movePreviewState.suppressed) {
+    movePreviewState.lastX = event.clientX;
+    movePreviewState.lastY = event.clientY;
+    return;
+  }
+  const changed = Math.abs(event.clientX-movePreviewState.lastX) + Math.abs(event.clientY-movePreviewState.lastY) >= 2;
+  if (!changed) return;
+  movePreviewState.lastX = event.clientX;
+  movePreviewState.lastY = event.clientY;
+  armMovePreview();
+  const button = event.target.closest?.('.move-up,.move-down');
+  const row = button?.closest('.itemrow');
+  if (!button || !row || !document.getElementById('reorder-list')?.contains(button)) return;
+  showMovePreview(event,Number(row.dataset.index),button.classList.contains('move-up')?-1:1,true);
+}
+function clearBuilderPointerHover(){
+  document.querySelectorAll('#reorder-list .pointer-hover,#reorder-list .pointer-hover-control').forEach(el => el.classList.remove('pointer-hover','pointer-hover-control'));
+}
+function setBuilderPointerHover(event,active){
+  const element = event.currentTarget && event.currentTarget !== document && event.currentTarget !== window ? event.currentTarget : event.target;
+  const row = element?.closest?.('.itemrow');
+  if (!active) {
+    if (element?.classList?.contains('itemrow')) element.classList.remove('pointer-hover');
+    else {
+      element?.classList?.remove('pointer-hover-control');
+      if (!row?.contains(event.relatedTarget)) row?.classList.remove('pointer-hover');
+    }
+    return;
+  }
+  if (event.pointerType !== 'mouse' || !moveHoverQuery.matches || movePreviewState.suppressed) return;
+  row?.classList.add('pointer-hover');
+  if (!element?.classList?.contains('itemrow')) element?.classList?.add('pointer-hover-control');
+}
+document.addEventListener('pointerdown', event => {
+  movePreviewState.lastInput = 'pointer';
+  if (event.pointerType !== 'mouse') { clearMovePreview(); clearBuilderPointerHover(); }
+}, true);
+document.addEventListener('pointerout', event => {
+  const row = event.target.closest?.('#reorder-list .itemrow');
+  if (!row || row.contains(event.relatedTarget)) return;
+  row.classList.remove('pointer-hover');
+  row.querySelectorAll('.pointer-hover-control').forEach(control => control.classList.remove('pointer-hover-control'));
+}, true);
+document.addEventListener('pointermove', handleMovePreviewPointerMove, true);
+document.addEventListener('keydown', event => {
+  movePreviewState.lastInput = 'keyboard';
+  if (event.key === 'Tab') movePreviewState.focusSuppressed = false;
+  if (event.key === 'Escape') clearMovePreview();
+}, true);
+document.addEventListener('visibilitychange', () => { if (document.hidden) clearMovePreview(); });
+window.addEventListener('scroll', () => { if (movePreviewState.trigger !== 'keyboard') clearMovePreview(); }, {passive:true});
 function announceReorder(item,from,position,method){
   requestAnimationFrame(() => {
     const live = document.getElementById('reorder-live');
@@ -888,7 +969,7 @@ function announceReorder(item,from,position,method){
 }
 function reorderItem(from,to,method){
   const source = S.draft || S.cert.items;
-  if (from === to || from < 0 || to < 0 || from >= source.length || to >= source.length) return;
+  if (from === to || from < 0 || to < 0 || from >= source.length || to >= source.length) return null;
   draftify();
   const items = draftItems();
   const [item] = items.splice(from,1);
@@ -897,16 +978,21 @@ function reorderItem(from,to,method){
   render();
   announceReorder(item,from,to,method);
   toast(item.nm+' moved to position '+(to+1)+'. The live version is unchanged.');
+  return item;
 }
-function moveItem(idx,dir){
+function moveItem(event,idx,dir){
   clearMovePreview();
+  suppressMovePreview();
   const to = idx + dir;
   if (to < 0 || to >= (S.draft || S.cert.items).length) return;
-  reorderItem(idx,to,'arrow control');
+  const movedItem = reorderItem(idx,to,'arrow control');
+  if (!movedItem) return;
   requestAnimationFrame(() => {
-    const moved = document.querySelector(`[data-index="${to}"]`);
+    const moved = document.querySelector(`[data-item-id="${movedItem.id}"]`);
     const preferred = moved?.querySelector(dir < 0 ? '.move-up' : '.move-down');
     const fallback = moved?.querySelector(dir < 0 ? '.move-down' : '.move-up');
+    moved?.classList.add('just-moved');
+    if (moved) setTimeout(() => moved.classList.remove('just-moved'),700);
     (preferred && !preferred.disabled ? preferred : fallback)?.focus();
   });
 }
